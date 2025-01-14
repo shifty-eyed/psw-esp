@@ -1,0 +1,25 @@
+{
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.espIdfPath": "/home/rrr/esp/esp-idf",
+    "idf.openOcdConfigs": [
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "target/esp32s3.cfg"
+    ],
+    "idf.toolsPath": "/home/rrr/.espressif",
+    "idf.flashType": "UART",
+    "idf.port": "/dev/ttyACM0",
+    "files.associations": {
+        "ui.h": "c",
+        "nvs_flash.h": "c",
+        "esp_bt.h": "c",
+        "esp_bt_main.h": "c",
+        "esp_err.h": "c",
+        "esp_bt_device.h": "c",
+        "esp_gatt_defs.h": "c",
+        "ble_hs.h": "c",
+        "esp_hidd.h": "c",
+        "esp_hid_common.h": "c",
+        "esp_hid_gap.h": "c",
+        "cstdint": "c"
+    }
+}
