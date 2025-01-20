@@ -20,6 +20,11 @@
         "esp_hidd.h": "c",
         "esp_hid_common.h": "c",
         "esp_hid_gap.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "esp_bt_defs.h": "c",
+        "hidd_le_prf_int.h": "c",
+        "esp_hidd_prf_api.h": "c",
+        "hid_dev.h": "c",
+        "lcd_touch.h": "c"
     }
 }

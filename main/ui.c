@@ -10,6 +10,8 @@ static tab_components device_tab;
 static tab_components password_tab;
 
 static lv_obj_t* tabview;
+static lv_obj_t* loading_overlay;
+static ui_command_callbacks_t *commands;
 
 static void evaluate_buttons_state() {
     //int selected_tab_id = lv_tabview_get_tab_active(tabview);
@@ -80,6 +82,15 @@ static void password_edit_cb(lv_event_t *e) {
 
 static void device_add_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Add device");
+    lv_obj_remove_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
+    commands->add_new_device();
+}
+
+void ui_on_device_paired() {
+    ESP_LOGI(TAG, "ui_on_device_paired");
+    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
+    //refresh device list
+    ESP_LOGI(TAG, "loading_overlay hidden");
 }
 
 static void device_delete_cb(lv_event_t *e) {
@@ -143,8 +154,22 @@ void tab_switch_event_cb(lv_event_t * e) {
     evaluate_buttons_state();
 }
 
+static lv_obj_t * create_loading_overlay() {
+    lv_obj_t * overlay = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(overlay, SCREEN_W, SCREEN_H);
+    lv_obj_set_style_bg_color(overlay, lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(overlay, LV_OPA_50, LV_PART_MAIN);
+    lv_obj_remove_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *spinner = lv_spinner_create(overlay);
+    lv_obj_set_size(spinner, 100, 100);
+    lv_obj_center(spinner);
+    lv_spinner_set_anim_params(spinner, 5000, 200);
+    return overlay;
+}
 
-void init_ui() {
+
+void init_ui(ui_command_callbacks_t *command_callbacks) {
+    commands = command_callbacks;
     ESP_LOGI(TAG, "init_ui()");
 
     tabview = lv_tabview_create(lv_screen_active());
@@ -161,4 +186,7 @@ void init_ui() {
         password_list_item_cb, TAB_ID_PASSWORD, LV_SYMBOL_KEYBOARD);
 
     evaluate_buttons_state();
+
+    loading_overlay = create_loading_overlay();
+    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
 }

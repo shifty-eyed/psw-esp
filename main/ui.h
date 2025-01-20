@@ -25,7 +25,14 @@ typedef struct {
     int selected_item;
 } tab_components;
 
-void init_ui();
+typedef struct {
+    //char* (*get_name)(int i);
+    void (*add_new_device)();
+} ui_command_callbacks_t;
+
+void init_ui(ui_command_callbacks_t *callbacks);
+
+void ui_on_device_paired();
 
 
 
