@@ -2,14 +2,10 @@
 #define PASSWORD_REGISTRY_H
 
 #include <stdint.h>
+#include "esp_bt_defs.h"
 
 #define NAME_MAX_LENGTH 32
 #define PASSWORD_MAX_LENGTH 32
-
-typedef struct {
-    char name[NAME_MAX_LENGTH];
-    char mac[PASSWORD_MAX_LENGTH];
-} device_entry;
 
 typedef struct {
     char name[NAME_MAX_LENGTH];
@@ -17,18 +13,27 @@ typedef struct {
 } password_entry;
 
 typedef struct {
-    //void (*add)(generic_entry *entry);
-    //void (*remove)(uint16_t id);
-    //void (*update)(generic_entry *entry);
-    //generic_entry* (*get)(uint16_t id);
+    void (*remove)(int i);
     char* (*get_name)(int i);
     int (*get_count)();
     void (*load)();
     void (*destroy)();
-} registry_api;
+} registry_api_t;
 
-extern registry_api password_registry;
-extern registry_api device_registry;
+extern registry_api_t password_registry_common;
+extern registry_api_t device_registry_common;
+
+/* Device related */
+
+typedef struct {
+    char name[NAME_MAX_LENGTH];
+    esp_bd_addr_t addr;
+    esp_link_key key;
+    esp_ble_addr_type_t addr_type;
+} device_entry_t;
+
+void device_add(const device_entry_t* device);
+device_entry_t* device_get(int i);
 
 
 #endif // PASSWORD_REGISTRY_H

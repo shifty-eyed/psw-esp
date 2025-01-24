@@ -4,14 +4,21 @@
 //#include "../infra.h"
 #include "item_registry.h"
 
-static const char *TAG = "MAIN";
+static const char *TAG = "UI";
 
-static tab_components device_tab;
-static tab_components password_tab;
+typedef struct {
+    lv_obj_t *tab,
+            *list,
+            *toolbar_button[3];
+    int selected_item;
+} tab_components_t;
+
+static tab_components_t device_tab;
+static tab_components_t password_tab;
 
 static lv_obj_t* tabview;
 static lv_obj_t* loading_overlay;
-static ui_command_callbacks_t *commands;
+static ui_api_callbacks_t* api_callbacks;
 
 static void evaluate_buttons_state() {
     //int selected_tab_id = lv_tabview_get_tab_active(tabview);
@@ -38,32 +45,40 @@ static void evaluate_buttons_state() {
     }
 }
 
-static bool list_item_cb(lv_event_t *e, tab_components* tab_data, registry_api *registry) {
+static bool select_list_item(tab_components_t* tab_data, int index) {
+    lv_obj_t * obj_to_select = lv_obj_get_child(tab_data->list, index);
+    if (obj_to_select == NULL || tab_data->selected_item == index) {
+        return false;
+    }
+    if (tab_data->selected_item >= 0) {
+        lv_obj_remove_state(lv_obj_get_child(tab_data->list, tab_data->selected_item), LV_STATE_CHECKED);
+    }
+    lv_obj_add_state(obj_to_select, LV_STATE_CHECKED);
+    tab_data->selected_item = index;
+    evaluate_buttons_state();
+    return true;
+}
+
+static bool list_item_cb(lv_event_t *e, tab_components_t* tab_data, registry_api_t *registry) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * selected_obj = lv_event_get_target(e);
     int index = lv_obj_get_index(selected_obj);
-    if (index >= registry->get_count()) {
-        return false;
-    }
 
     if (code == LV_EVENT_CLICKED) {
-        lv_obj_remove_state(lv_obj_get_child(tab_data->list, tab_data->selected_item), LV_STATE_CHECKED);
-        lv_obj_add_state(selected_obj, LV_STATE_CHECKED);
-        tab_data->selected_item = index;
-        evaluate_buttons_state();
-        return true;
+        return select_list_item(tab_data, index);
     }
     return false;
 }
 
 static void device_list_item_cb(lv_event_t *e) {
-    if (list_item_cb(e, &device_tab, &device_registry)) {
+    if (list_item_cb(e, &device_tab, &device_registry_common)) {
         ESP_LOGI(TAG, "devices_tab.selected_item %d", device_tab.selected_item);
+        api_callbacks->connect_to_device(device_tab.selected_item);
     }
 }
 
 static void password_list_item_cb(lv_event_t *e) {
-    if (list_item_cb(e, &password_tab, &password_registry)) {
+    if (list_item_cb(e, &password_tab, &password_registry_common)) {
         ESP_LOGI(TAG, "passwords_tab.selected_item %d", password_tab.selected_item);
     }
 }
@@ -83,14 +98,7 @@ static void password_edit_cb(lv_event_t *e) {
 static void device_add_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Add device");
     lv_obj_remove_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
-    commands->add_new_device();
-}
-
-void ui_on_device_paired() {
-    ESP_LOGI(TAG, "ui_on_device_paired");
-    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
-    //refresh device list
-    ESP_LOGI(TAG, "loading_overlay hidden");
+    api_callbacks->add_new_device();
 }
 
 static void device_delete_cb(lv_event_t *e) {
@@ -101,10 +109,11 @@ static void device_disconnect_cb(lv_event_t *e) {
     lv_obj_remove_state(lv_obj_get_child(device_tab.list, device_tab.selected_item), LV_STATE_CHECKED);
     device_tab.selected_item = -1;
     evaluate_buttons_state();
+    api_callbacks->disconnect();
     ESP_LOGI(TAG, "Click: Disconnect device");
 }
 
-static void updale_list_items(lv_obj_t *list, registry_api *registry, lv_event_cb_t cb, char *symbol) {
+static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol) {
     int trailing_dummies = 2;
     lv_obj_clean(list);
     for (int i = 0; i < registry->get_count() + trailing_dummies; i++) {
@@ -117,6 +126,17 @@ static void updale_list_items(lv_obj_t *list, registry_api *registry, lv_event_c
     }
 }
 
+void ui_on_device_connected(bool known_device) {
+    ESP_LOGI(TAG, "ui_on_device_paired known=%d", known_device);
+    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
+    ESP_LOGI(TAG, "loading_overlay hidden");
+    //refresh device list
+    updale_list_items(device_tab.list, &device_registry_common, device_list_item_cb, LV_SYMBOL_BLUETOOTH);
+    int last_device_index = device_registry_common.get_count() - 1;
+    select_list_item(&device_tab, last_device_index);
+    ESP_LOGI(TAG, "selected device %d", last_device_index);
+}
+
 static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int position, lv_event_cb_t cb) {
     lv_obj_t * btn = lv_button_create(parent);
     lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, NULL);
@@ -125,9 +145,9 @@ static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int pos
     return btn;
 }
 
-static tab_components init_tab_view(char *text, lv_obj_t *parent, registry_api *registry, 
+static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api_t *registry, 
         lv_event_cb_t cb, int tab_id, char *symbol) {
-    tab_components result;
+    tab_components_t result;
     result.selected_item = -1;
     result.tab = lv_tabview_add_tab(parent, text);
     style_tab_content(result.tab);
@@ -157,20 +177,16 @@ void tab_switch_event_cb(lv_event_t * e) {
 static lv_obj_t * create_loading_overlay() {
     lv_obj_t * overlay = lv_obj_create(lv_screen_active());
     lv_obj_set_size(overlay, SCREEN_W, SCREEN_H);
-    lv_obj_set_style_bg_color(overlay, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(overlay, LV_OPA_50, LV_PART_MAIN);
-    lv_obj_remove_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_t *spinner = lv_spinner_create(overlay);
-    lv_obj_set_size(spinner, 100, 100);
-    lv_obj_center(spinner);
-    lv_spinner_set_anim_params(spinner, 5000, 200);
+    style_loading_overlay(overlay, spinner);
     return overlay;
 }
 
 
-void init_ui(ui_command_callbacks_t *command_callbacks) {
-    commands = command_callbacks;
+void init_ui(ui_api_callbacks_t *callbacks) {
     ESP_LOGI(TAG, "init_ui()");
+
+    api_callbacks = callbacks;
 
     tabview = lv_tabview_create(lv_screen_active());
     style_tabview(tabview);
@@ -180,9 +196,9 @@ void init_ui(ui_command_callbacks_t *command_callbacks) {
 
     lv_obj_add_event_cb(tabview, tab_switch_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-    device_tab = init_tab_view("Devices", tabview, &device_registry, 
+    device_tab = init_tab_view("Devices", tabview, &device_registry_common, 
         device_list_item_cb, TAB_ID_DEVICE, LV_SYMBOL_BLUETOOTH);
-    password_tab = init_tab_view("Passwords", tabview, &password_registry, 
+    password_tab = init_tab_view("Passwords", tabview, &password_registry_common, 
         password_list_item_cb, TAB_ID_PASSWORD, LV_SYMBOL_KEYBOARD);
 
     evaluate_buttons_state();

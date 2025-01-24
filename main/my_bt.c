@@ -1,14 +1,19 @@
 
 #include "my_bt.h"
 
-static const char *TAG = "MAIN";
+static const char *TAG = "MYBT";
 
 #define CHAR_DECLARATION_SIZE   (sizeof(uint8_t))
 
 static uint16_t hid_conn_id = 0;
 static bool device_connected = false;
+static volatile bool known_device_advertised = false;
 
-static bt_callbacks_t *bt_api_callbacks;
+static esp_bd_addr_t connected_device_address;
+static esp_link_key connected_device_key;
+static esp_ble_addr_type_t connected_device_address_type;
+
+static bt_api_callbacks_t *api_callbacks;
 
 #define HIDD_DEVICE_NAME            "HID Test"
 static uint8_t hidd_service_uuid128[] = {
@@ -42,6 +47,15 @@ static esp_ble_adv_params_t hidd_adv_params = {
     //.peer_addr_type       =
     .channel_map        = ADV_CHNL_ALL,
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+};
+
+static esp_ble_adv_params_t direct_adv_params = {
+    .adv_int_min        = 0x20,
+    .adv_int_max        = 0x30,
+    .adv_type = ADV_TYPE_DIRECT_IND_HIGH,
+    .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
+    .channel_map = ADV_CHNL_ALL,
+    .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST,
 };
 
 static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param) {
@@ -102,19 +116,29 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 	 break;
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
         device_connected = true;
-        esp_bd_addr_t bd_addr;
-        memcpy(bd_addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+        if(param->ble_security.auth_cmpl.success) {
+            memcpy(connected_device_address, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+            memcpy(connected_device_key, param->ble_security.auth_cmpl.key, sizeof(esp_link_key));
+            connected_device_address_type = param->ble_security.auth_cmpl.addr_type;
 
-        bt_api_callbacks->on_device_paired(&(param->ble_security.auth_cmpl.bd_addr), &(param->ble_security.auth_cmpl.key));
-
-        ESP_LOGI(TAG, "remote BD_ADDR: %08x%04x",\
-                (bd_addr[0] << 24) + (bd_addr[1] << 16) + (bd_addr[2] << 8) + bd_addr[3],
-                (bd_addr[4] << 8) + bd_addr[5]);
-        ESP_LOGI(TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
-        ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
-        if(!param->ble_security.auth_cmpl.success) {
+            api_callbacks->on_device_paired(&(param->ble_security.auth_cmpl.bd_addr), 
+                &(param->ble_security.auth_cmpl.key),
+                &(param->ble_security.auth_cmpl.addr_type), known_device_advertised);
+            if (known_device_advertised) {
+            } else {
+                ESP_LOGI(TAG, "Connect completed! known=%d", known_device_advertised);
+            }
+        } else {
             ESP_LOGE(TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         }
+
+
+        ESP_LOGW(TAG, "connected to remote BD_ADDR: %08x%04x",\
+                (connected_device_address[0] << 24) + (connected_device_address[1] << 16) 
+                + (connected_device_address[2] << 8) + connected_device_address[3],
+                (connected_device_address[4] << 8) + connected_device_address[5]);
+        ESP_LOGI(TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
+        ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
         break;
     default:
         ESP_LOGI(TAG, "event = %d", event);
@@ -122,24 +146,45 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     }
 }
 
-
 void bt_start_advertising() {
+    if (device_connected) {
+        ESP_LOGW(TAG, "Device already connected");
+        return;
+    }
+    known_device_advertised = false;
+    ESP_LOGW(TAG, "Starting advertising");
     esp_ble_gap_start_advertising(&hidd_adv_params);
 }
 
-void init_bluetooth(bt_callbacks_t *callbacks) {
+void bt_disconnect() {
+    device_connected = false;
+    esp_ble_gap_disconnect(connected_device_address);
+    // todo figure out if this is necessary
+    //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
+}
 
-    bt_api_callbacks = callbacks; 
+void bt_direct_connect(esp_bd_addr_t addr, esp_link_key key, esp_ble_addr_type_t addr_type) {
+    if (device_connected) {
+        ESP_LOGW(TAG, "Device already connected");
+        return;
+    }
+
+    ESP_LOGW(TAG, "Starting advertising to %08x%04x", 
+        (addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + addr[3],
+        (addr[4] << 8) + addr[5]);
+    known_device_advertised = true;
+    esp_ble_gap_update_whitelist(true, addr, (esp_ble_wl_addr_type_t)addr_type);
+    direct_adv_params.peer_addr_type = addr_type;
+    memcpy(direct_adv_params.peer_addr, addr, sizeof(esp_bd_addr_t));
+    esp_ble_gap_start_advertising(&direct_adv_params);
+}
+
+
+void init_bluetooth(bt_api_callbacks_t *callbacks) {
+
+    api_callbacks = callbacks; 
     
     esp_err_t ret;
-
-    // Initialize NVS.
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( ret );
 
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 
@@ -191,6 +236,4 @@ void init_bluetooth(bt_callbacks_t *callbacks) {
     and the init key means which key you can distribute to the slave. */
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
-
-    //xTaskCreate(&hid_demo_task, "hid_task", 2048, NULL, 5, NULL);
 }

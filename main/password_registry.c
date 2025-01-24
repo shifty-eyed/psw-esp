@@ -28,7 +28,7 @@ static void destroy() {
     free(passwords);
 }
 
-registry_api password_registry = {
+registry_api_t password_registry_common = {
     .get_name = get_name,
     .get_count = get_stored_passwords_count,
     .load = load,

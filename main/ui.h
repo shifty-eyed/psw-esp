@@ -15,25 +15,20 @@
 
 #define BTN_DEVICE_DELETE (1)
 #define BTN_DEVICE_DISCONNECT (2)
+#define BTN_DEVICE_CONNECT (3)
 #define BTN_PASSWORD_EDIT (1)
 #define BTN_PASSWORD_DELETE (2)
 
 typedef struct {
-    lv_obj_t *tab,
-            *list,
-            *toolbar_button[3];
-    int selected_item;
-} tab_components;
-
-typedef struct {
     //char* (*get_name)(int i);
     void (*add_new_device)();
-} ui_command_callbacks_t;
+    void (*disconnect)();
+    void (*connect_to_device)(int i);
+} ui_api_callbacks_t;
 
-void init_ui(ui_command_callbacks_t *callbacks);
+void init_ui(ui_api_callbacks_t *callbacks);
 
-void ui_on_device_paired();
-
+void ui_on_device_connected(bool known_device);
 
 
 #endif // UI_H

@@ -25,6 +25,9 @@
         "hidd_le_prf_int.h": "c",
         "esp_hidd_prf_api.h": "c",
         "hid_dev.h": "c",
-        "lcd_touch.h": "c"
+        "lcd_touch.h": "c",
+        "list": "cpp",
+        "item_registry.h": "c",
+        "my_bt.h": "c"
     }
 }
