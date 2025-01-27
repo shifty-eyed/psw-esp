@@ -16,7 +16,7 @@ static void action_add_new_device() {
 static void action_connect_to_device(int i) {
     ESP_LOGI(TAG, "action_connect_to_device (%d)", i);
     device_entry_t *device = device_get(i);
-    bt_direct_connect(device->addr, device->key, device->addr_type);
+    bt_direct_connect(device->addr, device->addr_type);
 }
 
 static void action_disconnect() {
@@ -32,7 +32,7 @@ static ui_api_callbacks_t user_action_callbacks = {
 
 
 /* Bluetooth module callbacks */
-static void on_device_paired(esp_bd_addr_t* bd_addr, esp_link_key* key, esp_ble_addr_type_t* addr_type, bool known_device) {
+static void on_device_connected(esp_bd_addr_t* bd_addr, esp_ble_addr_type_t* addr_type, bool known_device) {
     if (known_device) {
         ESP_LOGI(TAG, "Device connected");
         return;
@@ -43,7 +43,6 @@ static void on_device_paired(esp_bd_addr_t* bd_addr, esp_link_key* key, esp_ble_
 
         device_entry_t new_device;
         memcpy(new_device.addr, bd_addr, sizeof(esp_bd_addr_t));
-        memcpy(new_device.key, key, sizeof(esp_link_key));
         new_device.addr_type = *addr_type;
         strcpy(new_device.name, "Computer");
         device_add(&new_device);
@@ -56,7 +55,7 @@ static void on_device_paired(esp_bd_addr_t* bd_addr, esp_link_key* key, esp_ble_
 }
 
 static bt_api_callbacks_t bt_api_callbacks = {
-    .on_device_paired = on_device_paired
+    .on_device_connected = on_device_connected
 };
 
 void app_main(void) {

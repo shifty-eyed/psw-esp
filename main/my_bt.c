@@ -121,8 +121,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             memcpy(connected_device_key, param->ble_security.auth_cmpl.key, sizeof(esp_link_key));
             connected_device_address_type = param->ble_security.auth_cmpl.addr_type;
 
-            api_callbacks->on_device_paired(&(param->ble_security.auth_cmpl.bd_addr), 
-                &(param->ble_security.auth_cmpl.key),
+            api_callbacks->on_device_connected(&(param->ble_security.auth_cmpl.bd_addr), 
                 &(param->ble_security.auth_cmpl.addr_type), known_device_advertised);
             if (known_device_advertised) {
             } else {
@@ -163,13 +162,13 @@ void bt_disconnect() {
     //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
 }
 
-void bt_direct_connect(esp_bd_addr_t addr, esp_link_key key, esp_ble_addr_type_t addr_type) {
+void bt_direct_connect(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     if (device_connected) {
         ESP_LOGW(TAG, "Device already connected");
         return;
     }
 
-    ESP_LOGW(TAG, "Starting advertising to %08x%04x", 
+    ESP_LOGW(TAG, "Starting direct advertising to %08x%04x", 
         (addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + addr[3],
         (addr[4] << 8) + addr[5]);
     known_device_advertised = true;

@@ -5,7 +5,7 @@
 #include "esp_bt_defs.h"
 
 #define NAME_MAX_LENGTH 32
-#define PASSWORD_MAX_LENGTH 32
+#define PASSWORD_MAX_LENGTH 128
 
 typedef struct {
     char name[NAME_MAX_LENGTH];
@@ -28,7 +28,6 @@ extern registry_api_t device_registry_common;
 typedef struct {
     char name[NAME_MAX_LENGTH];
     esp_bd_addr_t addr;
-    esp_link_key key;
     esp_ble_addr_type_t addr_type;
 } device_entry_t;
 
