@@ -79,7 +79,7 @@ static esp_ble_adv_data_t hidd_adv_data = {
     .flag = 0x6,
 };
 
-static esp_ble_adv_params_t hidd_adv_params = {
+static esp_ble_adv_params_t pair_new_device_adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x30,
     .adv_type           = ADV_TYPE_IND,
@@ -116,7 +116,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
         case ESP_HIDD_EVENT_BLE_DISCONNECT: {
             device_connected = false;
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_DISCONNECT");
-            esp_ble_gap_start_advertising(&hidd_adv_params);
+            esp_ble_gap_start_advertising(&pair_new_device_adv_params);
             break;
         }
         case ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT: {
@@ -139,7 +139,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 {
     switch (event) {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
-        esp_ble_gap_start_advertising(&hidd_adv_params);
+        esp_ble_gap_start_advertising(&pair_new_device_adv_params);
         break;
      case ESP_GAP_BLE_SEC_REQ_EVT:
         for(int i = 0; i < ESP_BD_ADDR_LEN; i++) {

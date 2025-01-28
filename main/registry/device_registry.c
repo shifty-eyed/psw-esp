@@ -103,7 +103,7 @@ static void save() {
     ESP_LOGI(TAG, "Saved %d devices", count);
 }
 
-void device_add(const device_entry_t* device) {
+void device_registry_add_new_device(const device_entry_t* device) {
     if (count >= MAX_DEVICES) {
         ESP_LOGE(TAG, "Device registry full");
         return;
@@ -123,10 +123,27 @@ static void device_remove(int i) {
     save();
 }
 
-device_entry_t* device_get(int i) {
-    return &devices[i];
+device_entry_t* device_registry_get_by_index(int i) {
+    return i < count ? &devices[i] : NULL;
 }
 
+int device_registry_get_index_by_name(const char* name) {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(devices[i].name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+device_entry_t* device_registry_get_by_address(const esp_bd_addr_t addr) {
+    for (int i = 0; i < count; i++) {
+        if (memcmp(devices[i].addr, addr, sizeof(esp_bd_addr_t)) == 0) {
+            return &devices[i];
+        }
+    }
+    return NULL;
+}
 
 static int get_stored_count() {
     return count;

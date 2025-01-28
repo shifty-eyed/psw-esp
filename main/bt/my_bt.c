@@ -9,10 +9,6 @@ static uint16_t hid_conn_id = 0;
 static bool device_connected = false;
 static volatile bool known_device_advertised = false;
 
-static esp_bd_addr_t connected_device_address;
-static esp_link_key connected_device_key;
-static esp_ble_addr_type_t connected_device_address_type;
-
 static bt_api_callbacks_t *api_callbacks;
 
 #define HIDD_DEVICE_NAME            "HID Test"
@@ -38,7 +34,7 @@ static esp_ble_adv_data_t hidd_adv_data = {
     .flag = 0x6,
 };
 
-static esp_ble_adv_params_t hidd_adv_params = {
+static esp_ble_adv_params_t pair_new_device_adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x30,
     .adv_type           = ADV_TYPE_IND,
@@ -82,7 +78,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
         case ESP_HIDD_EVENT_BLE_DISCONNECT: {
             device_connected = false;
             ESP_LOGI(TAG, "ESP_HIDD_EVENT_BLE_DISCONNECT");
-            //esp_ble_gap_start_advertising(&hidd_adv_params);
+            //esp_ble_gap_start_advertising(&pair_new_device_adv_params);
             break;
         }
         case ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT: {
@@ -103,26 +99,14 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
     switch (event) {
-    case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
-        ESP_LOGI(TAG, "can esp_ble_gap_start_advertising");
-        //esp_ble_gap_start_advertising(&hidd_adv_params);
-
-        break;
-     case ESP_GAP_BLE_SEC_REQ_EVT:
-        for(int i = 0; i < ESP_BD_ADDR_LEN; i++) {
-             ESP_LOGD(TAG, "%x:",param->ble_security.ble_req.bd_addr[i]);
-        }
-        esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
-	 break;
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
         device_connected = true;
         if(param->ble_security.auth_cmpl.success) {
-            memcpy(connected_device_address, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
-            memcpy(connected_device_key, param->ble_security.auth_cmpl.key, sizeof(esp_link_key));
-            connected_device_address_type = param->ble_security.auth_cmpl.addr_type;
+            //memcpy(connected_device_address, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+            //connected_device_address_type = param->ble_security.auth_cmpl.addr_type;
 
-            api_callbacks->on_device_connected(&(param->ble_security.auth_cmpl.bd_addr), 
-                &(param->ble_security.auth_cmpl.addr_type), known_device_advertised);
+            api_callbacks->on_device_connected(param->ble_security.auth_cmpl.bd_addr, 
+                param->ble_security.auth_cmpl.addr_type, known_device_advertised);
             if (known_device_advertised) {
             } else {
                 ESP_LOGI(TAG, "Connect completed! known=%d", known_device_advertised);
@@ -131,14 +115,20 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             ESP_LOGE(TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         }
 
-
-        ESP_LOGW(TAG, "connected to remote BD_ADDR: %08x%04x",\
-                (connected_device_address[0] << 24) + (connected_device_address[1] << 16) 
-                + (connected_device_address[2] << 8) + connected_device_address[3],
-                (connected_device_address[4] << 8) + connected_device_address[5]);
+        esp_bd_addr_t addr;
+        memcpy(addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
+        
+        ESP_LOGW(TAG, "connected to remote BD_ADDR: %02x:%02x:%02x:%02x:%02x:%02x:", 
+            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
         ESP_LOGI(TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
         ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
         break;
+    case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
+        ESP_LOGD(TAG, "can esp_ble_gap_start_advertising");
+        break;
+     case ESP_GAP_BLE_SEC_REQ_EVT:
+        esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
+	 break;
     default:
         ESP_LOGI(TAG, "event = %d", event);
         break;
@@ -152,10 +142,10 @@ void bt_start_advertising() {
     }
     known_device_advertised = false;
     ESP_LOGW(TAG, "Starting advertising");
-    esp_ble_gap_start_advertising(&hidd_adv_params);
+    esp_ble_gap_start_advertising(&pair_new_device_adv_params);
 }
 
-void bt_disconnect() {
+void bt_disconnect(esp_bd_addr_t connected_device_address) {
     device_connected = false;
     esp_ble_gap_disconnect(connected_device_address);
     // todo figure out if this is necessary

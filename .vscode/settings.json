@@ -29,6 +29,7 @@
         "list": "cpp",
         "item_registry.h": "c",
         "my_bt.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "cstring": "c"
     }
 }

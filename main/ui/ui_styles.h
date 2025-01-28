@@ -69,10 +69,4 @@ static void style_loading_overlay(lv_obj_t *overlay, lv_obj_t *spinner) {
     lv_spinner_set_anim_params(spinner, 5000, 200);
 }
 
-static void style_pair_device_dialog(lv_obj_t *dialog) {
-    lv_obj_set_style_bg_color(dialog, lv_palette_main(LV_PALETTE_GREY), 0);
-    //lv_obj_set_style_bg_opa(dialog, LV_OPA_80, 0);
-    
-}
-
 #endif

@@ -29,7 +29,9 @@ typedef struct {
 
 void init_ui(ui_api_callbacks_t *callbacks);
 
-void ui_on_device_connected(bool known_device);
+void ui_on_known_device_connected(int index);
+void ui_on_new_device_saved(int index);
+void ui_on_new_device_paired();
 
 
 

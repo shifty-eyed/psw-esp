@@ -31,8 +31,10 @@ typedef struct {
     esp_ble_addr_type_t addr_type;
 } device_entry_t;
 
-void device_add(const device_entry_t* device);
-device_entry_t* device_get(int i);
+void device_registry_add_new_device(const device_entry_t* device);
+device_entry_t* device_registry_get_by_index(int i);
+int device_registry_get_index_by_name(const char* name);
+device_entry_t* device_registry_get_by_address(const esp_bd_addr_t addr);
 
 
 #endif // PASSWORD_REGISTRY_H

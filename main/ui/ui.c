@@ -19,7 +19,7 @@ static tab_components_t device_tab;
 static tab_components_t password_tab;
 
 static lv_obj_t* tabview;
-static lv_obj_t* loading_overlay;
+//static lv_obj_t* loading_overlay;
 static ui_api_callbacks_t* api_callbacks;
 
 static void evaluate_buttons_state() {
@@ -128,15 +128,20 @@ static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event
     }
 }
 
-void ui_on_device_connected(bool known_device) {
-    ESP_LOGI(TAG, "ui_on_device_paired known=%d", known_device);
-    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
-    ESP_LOGI(TAG, "loading_overlay hidden");
-    //refresh device list
+void ui_on_known_device_connected(int index) {
+    ESP_LOGI(TAG, "ui_on_known_device_connected index=%d", index);
+    show_toast("Device connected", false, 1000);
+    select_list_item(&device_tab, index);
+}
+
+void ui_on_new_device_saved(int index) {
+    show_toast("New Device connected", false, 1000);
     updale_list_items(device_tab.list, &device_registry_common, device_list_item_cb, LV_SYMBOL_BLUETOOTH);
-    int last_device_index = device_registry_common.get_count() - 1;
-    select_list_item(&device_tab, last_device_index);
-    ESP_LOGI(TAG, "selected device %d", last_device_index);
+    select_list_item(&device_tab, index);
+}
+
+void ui_on_new_device_paired() { //this is called while dialog has open
+    pair_device_dialog_on_pairing_succeeded();
 }
 
 static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int position, lv_event_cb_t cb) {
@@ -238,6 +243,8 @@ void init_ui(ui_api_callbacks_t *callbacks) {
 
     evaluate_buttons_state();
 
-    loading_overlay = create_loading_overlay();
-    lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
+    pair_device_dialog_init(callbacks);
+
+    //loading_overlay = create_loading_overlay();
+    //lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
 }

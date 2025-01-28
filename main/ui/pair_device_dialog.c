@@ -1,25 +1,30 @@
-
+#include <string.h>
 #include "lvgl.h"
 #include "ui.h"
-#include "ui_styles.h"
 #include "esp_log.h"
-
 
 static const char *TAG = "PAIR_DIALOG";
 
 static lv_obj_t* dialog = NULL;
-static lv_obj_t *spinner = NULL;
-static lv_obj_t *status_label = NULL;
-static lv_obj_t *save_button = NULL;
-static lv_obj_t *cancel_button = NULL;
-static lv_obj_t *name_input = NULL;
+static lv_obj_t* spinner = NULL;
+static lv_obj_t* status_label = NULL;
+static lv_obj_t* save_button = NULL;
+static lv_obj_t* cancel_button = NULL;
+static lv_obj_t* name_input = NULL;
+static lv_obj_t* kb = NULL;
 
-static ui_api_callbacks_t* api_callbacks;
+static ui_api_callbacks_t *api_callbacks;
 
 static bool paired = false;
 
-//API: dialog actions: cancel_pairing(), save_new_device()
-//API: dialog receives: pair_device_dialog_on_pairing_succeeded(addr, addr_type)
+// API: dialog actions: cancel_pairing(), save_new_device()
+// API: dialog receives: pair_device_dialog_on_pairing_succeeded(addr, addr_type)
+
+static void style_pair_device_dialog(lv_obj_t *dialog) {
+    lv_obj_set_style_bg_color(dialog, lv_palette_main(LV_PALETTE_GREY), 0);
+    //lv_obj_set_style_bg_opa(dialog, LV_OPA_80, 0);
+    
+}
 
 static void cancel_dialog_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Close dialog");
@@ -34,10 +39,14 @@ static void save_new_device_cb(lv_event_t *e) {
 }
 
 static void evaluate_save_button_state() {
-    bool text_entered = lv_textarea_get_text_length(name_input) > 0;
-    if (paired && text_entered) {
+    const char *text = lv_textarea_get_text(name_input);
+    bool text_entered = (text != NULL) && (strlen(text) > 0);
+    if (paired && text_entered)
+    {
         lv_obj_remove_state(save_button, LV_STATE_DISABLED);
-    } else {
+    }
+    else
+    {
         lv_obj_add_state(save_button, LV_STATE_DISABLED);
     }
 }
@@ -65,35 +74,48 @@ void pair_device_dialog_show() {
 
 void pair_device_dialog_init(ui_api_callbacks_t *callbacks) {
     if (dialog != NULL) {
-        return dialog;
+        return;
     }
     api_callbacks = callbacks;
     dialog = lv_obj_create(lv_scr_act());
     lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
     style_pair_device_dialog(dialog);
 
-    name_input = lv_textarea_create(dialog);
-    lv_textarea_set_placeholder_text(name_input, "New Device Name");
-    lv_obj_set_size(name_input, 200, 40);
-    lv_obj_align(name_input, LV_ALIGN_TOP_MID, 0, 20);
+    save_button = lv_button_create(dialog);
+    lv_obj_add_event_cb(save_button, save_new_device_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_style_bg_image_src(save_button, LV_SYMBOL_SAVE, 0);
+    lv_obj_set_size(save_button, 60, 40);
+    lv_obj_align(save_button, LV_ALIGN_TOP_LEFT, 0, -20);
+
+    cancel_button = lv_button_create(dialog);
+    lv_obj_add_event_cb(cancel_button, cancel_dialog_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
+    lv_obj_set_size(cancel_button, 60, 40);
+    lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, 0, -20);
+
+    spinner = lv_spinner_create(dialog);
+    lv_obj_align(spinner, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_size(spinner, 30, 30);
 
     status_label = lv_label_create(dialog);
     lv_label_set_text(status_label, "Pairing...");
-    lv_obj_align(status_label, LV_ALIGN_TOP_MID, -40, 80);
+    lv_obj_align(status_label, LV_ALIGN_TOP_LEFT, 0, 40);
 
-    spinner = lv_spinner_create(dialog);
-    lv_obj_align_to(spinner, status_label, LV_ALIGN_OUT_RIGHT_MID, 0, 10);
+    name_input = lv_textarea_create(dialog);
+    lv_textarea_set_placeholder_text(name_input, "New Device Name");
+    lv_textarea_set_one_line(name_input, true);
+    lv_obj_set_size(name_input, SCREEN_W - 20, 40);
+    lv_obj_align(name_input, LV_ALIGN_TOP_MID, 0, 80);
 
-    save_button = lv_button_create(dialog);
-    lv_obj_set_event_cb(save_button, save_new_device_cb);
-    lv_obj_set_style_bg_image_src(save_button, LV_SYMBOL_SAVE, 0);
-    lv_obj_align(save_button, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+    kb = lv_keyboard_create(dialog);
+    lv_obj_set_size(kb,  SCREEN_W, SCREEN_H / 2);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 20);
+    lv_obj_remove_flag(kb, LV_OBJ_FLAG_SCROLLABLE);
+    lv_keyboard_set_textarea(kb, name_input);
 
-    cancel_button = lv_button_create(dialog);
-    lv_obj_set_event_cb(cancel_button, cancel_dialog_cb);
-    lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
-    lv_obj_align(cancel_button, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
-
-    return dialog;
+    //add some event to enable save button to kb
+    //fix the error when connecting known device
+    //suggest the name from device
 }
