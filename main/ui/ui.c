@@ -1,7 +1,9 @@
+#include "esp_log.h"
+
 #include "ui.h"
 #include "ui_styles.h"
-#include "esp_log.h"
-//#include "../infra.h"
+#include "ui_internal.h"
+
 #include "item_registry.h"
 
 static const char *TAG = "UI";
@@ -97,8 +99,8 @@ static void password_edit_cb(lv_event_t *e) {
 
 static void device_add_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Add device");
-    lv_obj_remove_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
-    api_callbacks->add_new_device();
+    pair_device_dialog_show();
+    api_callbacks->pairing_initiated();
 }
 
 static void device_delete_cb(lv_event_t *e) {
@@ -180,6 +182,39 @@ static lv_obj_t * create_loading_overlay() {
     lv_obj_t *spinner = lv_spinner_create(overlay);
     style_loading_overlay(overlay, spinner);
     return overlay;
+}
+
+static void toast_timer_cb(lv_timer_t *t) {
+    lv_obj_t *toast = (lv_obj_t *)lv_timer_get_user_data(t);
+    lv_obj_del(toast);
+    lv_timer_del(t);
+}
+
+void show_toast(const char *message, bool is_error, uint32_t duration_ms) {
+    static lv_obj_t *toast = NULL;
+    static lv_timer_t *timer = NULL;
+
+    if (!toast) {
+        toast = lv_obj_create(lv_scr_act());
+        lv_obj_set_size(toast, 200, 50);
+        lv_obj_align(toast, LV_ALIGN_BOTTOM_MID, 0, -40);
+        lv_obj_set_style_bg_color(toast, lv_palette_main(is_error ? LV_PALETTE_RED : LV_PALETTE_BLUE), 0);
+        lv_obj_set_style_radius(toast, 10, 0);
+        lv_obj_set_style_pad_all(toast, 10, 0);
+        lv_obj_set_style_text_color(toast, lv_color_white(), 0);
+        lv_obj_remove_flag(toast, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_t *label = lv_label_create(toast);
+        lv_obj_center(label);
+    }
+
+    lv_label_set_text(lv_obj_get_child(toast, 0), message);
+
+    if (timer) lv_timer_delete(timer);
+    timer = lv_timer_create_basic();
+    lv_timer_set_period(timer, duration_ms);
+    lv_timer_set_repeat_count(timer, 1);
+    lv_timer_set_user_data(timer, toast);
+    lv_timer_set_cb(timer, toast_timer_cb);
 }
 
 

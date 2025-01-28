@@ -30,8 +30,9 @@ typedef struct {
 } bt_api_callbacks_t;
 
 void bt_start_advertising();
+void bt_stop_advertising();
 void bt_disconnect();
-void bt_direct_connect(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type);
+void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type);
 
 void init_bluetooth(bt_api_callbacks_t *callbacks);
 //void stop_advertising();

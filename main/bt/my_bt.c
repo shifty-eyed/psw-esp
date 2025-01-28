@@ -162,7 +162,12 @@ void bt_disconnect() {
     //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
 }
 
-void bt_direct_connect(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
+void bt_stop_advertising() {
+    ESP_LOGW(TAG, "Stop advertising");
+    esp_ble_gap_stop_advertising();
+}
+
+void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     if (device_connected) {
         ESP_LOGW(TAG, "Device already connected");
         return;

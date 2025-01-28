@@ -20,15 +20,17 @@
 #define BTN_PASSWORD_DELETE (2)
 
 typedef struct {
-    //char* (*get_name)(int i);
-    void (*add_new_device)();
+    void (*pairing_initiated)();
     void (*disconnect)();
     void (*connect_to_device)(int i);
+    void (*cancel_pairing)();
+    void (*save_new_device)(const char *name);
 } ui_api_callbacks_t;
 
 void init_ui(ui_api_callbacks_t *callbacks);
 
 void ui_on_device_connected(bool known_device);
+
 
 
 #endif // UI_H

@@ -28,6 +28,7 @@
         "lcd_touch.h": "c",
         "list": "cpp",
         "item_registry.h": "c",
-        "my_bt.h": "c"
+        "my_bt.h": "c",
+        "string.h": "c"
     }
 }
