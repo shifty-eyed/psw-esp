@@ -100,8 +100,8 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
     switch (event) {
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
-        device_connected = true;
         if(param->ble_security.auth_cmpl.success) {
+            device_connected = true;
             //memcpy(connected_device_address, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
             //connected_device_address_type = param->ble_security.auth_cmpl.addr_type;
 
@@ -145,18 +145,6 @@ void bt_start_advertising() {
     esp_ble_gap_start_advertising(&pair_new_device_adv_params);
 }
 
-void bt_disconnect(esp_bd_addr_t connected_device_address) {
-    device_connected = false;
-    esp_ble_gap_disconnect(connected_device_address);
-    // todo figure out if this is necessary
-    //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
-}
-
-void bt_stop_advertising() {
-    ESP_LOGW(TAG, "Stop advertising");
-    esp_ble_gap_stop_advertising();
-}
-
 void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     if (device_connected) {
         ESP_LOGW(TAG, "Device already connected");
@@ -173,6 +161,17 @@ void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     esp_ble_gap_start_advertising(&direct_adv_params);
 }
 
+void bt_disconnect(esp_bd_addr_t connected_device_address) {
+    device_connected = false;
+    esp_ble_gap_disconnect(connected_device_address);
+    // todo figure out if this is necessary
+    //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
+}
+
+void bt_stop_advertising() {
+    ESP_LOGW(TAG, "Stop advertising");
+    esp_ble_gap_stop_advertising();
+}
 
 void init_bluetooth(bt_api_callbacks_t *callbacks) {
 

@@ -30,6 +30,7 @@
         "item_registry.h": "c",
         "my_bt.h": "c",
         "string.h": "c",
-        "cstring": "c"
+        "cstring": "c",
+        "compare": "c"
     }
 }

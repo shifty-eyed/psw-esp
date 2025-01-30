@@ -79,7 +79,6 @@ static void on_device_connected(esp_bd_addr_t bd_addr, esp_ble_addr_type_t addr_
         ui_on_new_device_paired();
         lvgl_port_unlock();
     }
-    
 }
 
 static bt_api_callbacks_t bt_api_callbacks = {
@@ -93,7 +92,7 @@ void app_main(void) {
 
 
     // Initialize NVS.
-    //ESP_ERROR_CHECK(nvs_flash_erase());
+    ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());

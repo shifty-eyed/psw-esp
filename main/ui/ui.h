@@ -25,6 +25,7 @@ typedef struct {
     void (*connect_to_device)(int i);
     void (*cancel_pairing)();
     void (*save_new_device)(const char *name);
+    void (*delete_device)(int i);
 } ui_api_callbacks_t;
 
 void init_ui(ui_api_callbacks_t *callbacks);

@@ -22,7 +22,7 @@ static esp_lcd_panel_handle_t lcd_panel = NULL;
 static lv_display_t *lvgl_disp = NULL;
 static esp_lcd_touch_handle_t tp = NULL;
 
-static const char *TAG = "LCD_TOUCH_INIT";
+static const char *TAG = "LCD_TOUCH";
 
 static esp_err_t app_lcd_init(void) {
     esp_err_t ret = ESP_OK;
@@ -97,20 +97,22 @@ static void example_lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
 
     uint16_t tp_x;
     uint16_t tp_y;
+    static uint16_t prev_x = 0;
+    static uint16_t prev_y = 0;
     uint8_t tp_cnt = 0;
     /* Read data from touch controller into memory */
     esp_lcd_touch_read_data(tp);
     /* Read data from touch controller */
     bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &tp_x, &tp_y, NULL, &tp_cnt, 1);
-    if (tp_pressed && tp_cnt > 0)
-    {
-        data->point.x = tp_x;
-        data->point.y = tp_y;
+    if (tp_pressed && tp_cnt > 0) {
+        data->point.x = prev_x = tp_x;
+        data->point.y = prev_y = tp_y;
         data->state = LV_INDEV_STATE_PRESSED;
-        ESP_LOGD(TAG, "Touch position: %d,%d", tp_x, tp_y);
+        ESP_LOGD(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
     }
-    else
-    {
+    else {
+        data->point.x = prev_x;
+        data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
     }
 }
@@ -180,7 +182,7 @@ void init_lcd_and_touch(void) {
  /* LCD HW initialization */
     ESP_ERROR_CHECK(app_lcd_init());
 
-        ESP_LOGI(TAG, "Initialize I2C bus");
+    ESP_LOGI(TAG, "Initialize I2C bus");
     esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_NONE);
     esp_log_level_set("CST816S", ESP_LOG_NONE);
     const i2c_config_t i2c_conf = {
@@ -227,6 +229,7 @@ void init_lcd_and_touch(void) {
     lv_indev_set_read_cb(indev_touch, example_lvgl_touch_cb);
     lv_indev_set_user_data(indev_touch, tp);
     lv_indev_set_type(indev_touch, LV_INDEV_TYPE_POINTER);
+    //lv_indev_set_mode(indev_touch, LV_INDEV_MODE_EVENT);
     lv_indev_set_display(indev_touch, lvgl_disp);
 
     bsp_display_brightness_init();

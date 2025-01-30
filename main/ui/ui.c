@@ -21,6 +21,11 @@ static tab_components_t password_tab;
 static lv_obj_t* tabview;
 //static lv_obj_t* loading_overlay;
 static ui_api_callbacks_t* api_callbacks;
+static lv_obj_t *toast = NULL;
+static lv_timer_t *timer = NULL;
+
+
+static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
 
 static void evaluate_buttons_state() {
     //int selected_tab_id = lv_tabview_get_tab_active(tabview);
@@ -66,7 +71,7 @@ static bool list_item_cb(lv_event_t *e, tab_components_t* tab_data, registry_api
     lv_obj_t * selected_obj = lv_event_get_target(e);
     int index = lv_obj_get_index(selected_obj);
 
-    if (code == LV_EVENT_CLICKED) {
+    if (code == LV_EVENT_CLICKED && index >= 0 && index < registry->get_count()) {
         return select_list_item(tab_data, index);
     }
     return false;
@@ -105,6 +110,12 @@ static void device_add_cb(lv_event_t *e) {
 
 static void device_delete_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Delete device");
+    device_registry_common.remove(device_tab.selected_item);
+    lv_obj_remove_state(lv_obj_get_child(device_tab.list, device_tab.selected_item), LV_STATE_CHECKED);
+    device_tab.selected_item = -1;
+    updale_list_items(device_tab.list, &device_registry_common, device_list_item_cb, LV_SYMBOL_BLUETOOTH);
+    //lv_obj_t* item = lv_obj_get_child(device_tab.list, device_tab.selected_item);
+    //lv_obj_delete(item);
 }
 
 static void device_disconnect_cb(lv_event_t *e) {
@@ -190,27 +201,26 @@ static lv_obj_t * create_loading_overlay() {
 }
 
 static void toast_timer_cb(lv_timer_t *t) {
-    lv_obj_t *toast = (lv_obj_t *)lv_timer_get_user_data(t);
-    lv_obj_del(toast);
-    lv_timer_del(t);
+    lv_obj_delete(toast);
+    lv_timer_delete(timer);
+    toast = NULL;
+    timer = NULL;
 }
 
 void show_toast(const char *message, bool is_error, uint32_t duration_ms) {
-    static lv_obj_t *toast = NULL;
-    static lv_timer_t *timer = NULL;
-
-    if (!toast) {
-        toast = lv_obj_create(lv_scr_act());
-        lv_obj_set_size(toast, 200, 50);
-        lv_obj_align(toast, LV_ALIGN_BOTTOM_MID, 0, -40);
-        lv_obj_set_style_bg_color(toast, lv_palette_main(is_error ? LV_PALETTE_RED : LV_PALETTE_BLUE), 0);
-        lv_obj_set_style_radius(toast, 10, 0);
-        lv_obj_set_style_pad_all(toast, 10, 0);
-        lv_obj_set_style_text_color(toast, lv_color_white(), 0);
-        lv_obj_remove_flag(toast, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_t *label = lv_label_create(toast);
-        lv_obj_center(label);
+    if (toast) {
+        return;
     }
+    toast = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(toast, 200, 50);
+    lv_obj_align(toast, LV_ALIGN_BOTTOM_MID, 0, -40);
+    lv_obj_set_style_bg_color(toast, lv_palette_main(is_error ? LV_PALETTE_RED : LV_PALETTE_BLUE), 0);
+    lv_obj_set_style_radius(toast, 10, 0);
+    lv_obj_set_style_pad_all(toast, 10, 0);
+    lv_obj_set_style_text_color(toast, lv_color_white(), 0);
+    lv_obj_remove_flag(toast, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *label = lv_label_create(toast);
+    lv_obj_center(label);
 
     lv_label_set_text(lv_obj_get_child(toast, 0), message);
 

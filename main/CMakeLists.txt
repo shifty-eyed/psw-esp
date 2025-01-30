@@ -8,6 +8,7 @@ set(srcs "main.c"
          "registry/password_registry.c"
          "ui/ui.c"
          "ui/pair_device_dialog.c"
+         "ui/keyboard.c"
         )
 set(include_dirs ".;./bt;./registry;./system;./ui")
 
