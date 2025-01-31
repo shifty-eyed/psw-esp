@@ -92,7 +92,7 @@ void app_main(void) {
 
 
     // Initialize NVS.
-    ESP_ERROR_CHECK(nvs_flash_erase());
+    //ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -108,5 +108,6 @@ void app_main(void) {
     lvgl_port_unlock();
 
     init_bluetooth(&bt_api_callbacks);
+    esp_log_level_set(HID_LE_PRF_TAG, ESP_LOG_DEBUG);
 
 }

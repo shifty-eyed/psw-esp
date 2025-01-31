@@ -48,7 +48,7 @@ static esp_ble_adv_params_t pair_new_device_adv_params = {
 static esp_ble_adv_params_t direct_adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x30,
-    .adv_type = ADV_TYPE_DIRECT_IND_HIGH,
+    .adv_type = ADV_TYPE_IND,
     .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
     .channel_map = ADV_CHNL_ALL,
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST,
@@ -98,6 +98,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 }
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+    esp_bd_addr_t addr;
     switch (event) {
      case ESP_GAP_BLE_AUTH_CMPL_EVT:
         if(param->ble_security.auth_cmpl.success) {
@@ -115,20 +116,44 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             ESP_LOGE(TAG, "fail reason = 0x%x",param->ble_security.auth_cmpl.fail_reason);
         }
 
-        esp_bd_addr_t addr;
         memcpy(addr, param->ble_security.auth_cmpl.bd_addr, sizeof(esp_bd_addr_t));
         
-        ESP_LOGW(TAG, "connected to remote BD_ADDR: %02x:%02x:%02x:%02x:%02x:%02x:", 
+        ESP_LOGW(TAG, "connected to remote BD_ADDR: %02X:%02X:%02X:%02X:%02X:%02X", 
             addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
         ESP_LOGI(TAG, "address type = %d", param->ble_security.auth_cmpl.addr_type);
         ESP_LOGI(TAG, "pair status = %s",param->ble_security.auth_cmpl.success ? "success" : "fail");
+
+
+        static esp_ble_bond_dev_t bonded_devices[10];
+        static int bonded_device_count = 20;
+        esp_ble_get_bond_device_list(&bonded_device_count, bonded_devices);
+        for (int i = 0; i < bonded_device_count; i++) {
+            ESP_LOGI(TAG, "Bonded device %d: %02X:%02X:%02X:%02X:%02X:%02X  type=%d", i,
+                bonded_devices[i].bd_addr[0], bonded_devices[i].bd_addr[1], bonded_devices[i].bd_addr[2],
+                bonded_devices[i].bd_addr[3], bonded_devices[i].bd_addr[4], bonded_devices[i].bd_addr[5], 
+                bonded_devices[i].bd_addr_type);
+        }
+
         break;
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
-        ESP_LOGD(TAG, "can esp_ble_gap_start_advertising");
+        ESP_LOGW(TAG, "ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT");
         break;
-     case ESP_GAP_BLE_SEC_REQ_EVT:
+    case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
+        ESP_LOGW(TAG, "ESP_GAP_BLE_ADV_START_COMPLETE_EVT, result: %d", param->adv_start_cmpl.status);
+        break;
+    case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
+        ESP_LOGW(TAG, "ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT, result: %d", param->adv_start_cmpl.status);
+        break;
+    case ESP_GAP_BLE_SEC_REQ_EVT:
+        ESP_LOGW(TAG, "ESP_GAP_BLE_SEC_REQ_EVT");
         esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
-	 break;
+	    break;
+    case ESP_GAP_BLE_KEY_EVT:
+        memcpy(addr, param->ble_security.key_notif.bd_addr, sizeof(esp_bd_addr_t));
+        //shows the ble key info share with peer device to the user.
+        ESP_LOGW(TAG, "ESP_GAP_BLE_KEY_EVT peer_addr= %02X:%02X:%02X:%02X:%02X:%02X passkey=%lu", 
+            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], param->ble_security.key_notif.passkey);
+        break;
     default:
         ESP_LOGI(TAG, "event = %d", event);
         break;
@@ -137,7 +162,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 
 void bt_start_advertising() {
     if (device_connected) {
-        ESP_LOGW(TAG, "Device already connected");
+        ESP_LOGW(TAG, "bt_start_advertising - Device already connected");
         return;
     }
     known_device_advertised = false;
@@ -146,26 +171,27 @@ void bt_start_advertising() {
 }
 
 void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
+    esp_err_t err;
     if (device_connected) {
-        ESP_LOGW(TAG, "Device already connected");
+        ESP_LOGW(TAG, "bt_direct_advertizing - Device already connected");
         return;
     }
+    ESP_LOGW(TAG, "Starting direct advertising to %02X:%02X:%02X:%02X:%02X:%02X type=%d", 
+        addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr_type);
 
-    ESP_LOGW(TAG, "Starting direct advertising to %08x%04x", 
-        (addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + addr[3],
-        (addr[4] << 8) + addr[5]);
     known_device_advertised = true;
+    esp_ble_gap_clear_whitelist();
     esp_ble_gap_update_whitelist(true, addr, (esp_ble_wl_addr_type_t)addr_type);
+
     direct_adv_params.peer_addr_type = addr_type;
     memcpy(direct_adv_params.peer_addr, addr, sizeof(esp_bd_addr_t));
+    
     esp_ble_gap_start_advertising(&direct_adv_params);
 }
 
 void bt_disconnect(esp_bd_addr_t connected_device_address) {
     device_connected = false;
     esp_ble_gap_disconnect(connected_device_address);
-    // todo figure out if this is necessary
-    //esp_ble_gap_update_whitelist(false, connected_device_address, (esp_ble_wl_addr_type_t)connected_device_address_type);
 }
 
 void bt_stop_advertising() {
@@ -229,4 +255,5 @@ void init_bluetooth(bt_api_callbacks_t *callbacks) {
     and the init key means which key you can distribute to the slave. */
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
+    esp_ble_gap_config_local_privacy(true);
 }
