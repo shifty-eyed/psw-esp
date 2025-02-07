@@ -85,6 +85,16 @@ static bt_api_callbacks_t bt_api_callbacks = {
     .on_device_connected = on_device_connected
 };
 
+/*
+TODO:
+
+- registry should use lookup by name and don't rewrite everything
+- make ui button to type password
+- make ui for new password generation
+- make ui for password change
+
+ */
+
 void app_main(void) {
     esp_err_t ret;
     init_lcd_and_touch();

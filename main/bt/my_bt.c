@@ -11,6 +11,8 @@ static volatile bool known_device_advertised = false;
 
 static bt_api_callbacks_t *api_callbacks;
 
+static uint8_t ascii_to_hid(uint8_t c, bool *shift);
+
 #define HIDD_DEVICE_NAME            "HID Test"
 static uint8_t hidd_service_uuid128[] = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
@@ -58,7 +60,6 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
     switch(event) {
         case ESP_HIDD_EVENT_REG_FINISH: {
             if (param->init_finish.state == ESP_HIDD_INIT_OK) {
-                //esp_bd_addr_t rand_addr = {0x04,0x11,0x11,0x11,0x11,0x05};
                 esp_ble_gap_set_device_name(HIDD_DEVICE_NAME);
                 esp_ble_gap_config_adv_data(&hidd_adv_data);
 
@@ -199,6 +200,25 @@ void bt_stop_advertising() {
     esp_ble_gap_stop_advertising();
 }
 
+void bt_hid_send_keyboard_string_sequence(const char *s) {
+    if (!device_connected || !s) return;
+
+    while (*s) {
+        bool shift = false;
+        uint8_t keycode = ascii_to_hid((uint8_t)*s, &shift);
+
+        if (keycode) {
+            uint8_t modifiers = shift ? LEFT_SHIFT_KEY_MASK : 0;
+            esp_hidd_send_keyboard_value(0, modifiers, &keycode, 1);
+            vTaskDelay(pdMS_TO_TICKS(10));  // Short delay for key press
+            esp_hidd_send_keyboard_value(0, 0, NULL, 0);  // Key release
+            vTaskDelay(pdMS_TO_TICKS(10));  // Short delay for key release
+        }
+        s++;
+    }
+
+}
+
 void init_bluetooth(bt_api_callbacks_t *callbacks) {
 
     api_callbacks = callbacks; 
@@ -256,4 +276,59 @@ void init_bluetooth(bt_api_callbacks_t *callbacks) {
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
     esp_ble_gap_config_local_privacy(true);
+}
+
+static uint8_t ascii_to_hid(uint8_t c, bool *shift) {
+    *shift = false;
+    
+    if (c >= 'a' && c <= 'z') {
+        return HID_KEY_A + (c - 'a'); // HID a-z
+    }
+    if (c >= 'A' && c <= 'Z') {
+        *shift = true;
+        return HID_KEY_A + (c - 'A'); // HID A-Z (requires shift)
+    }
+    if (c >= '1' && c <= '9') {
+        return HID_KEY_1 + (c - '1'); // HID 1-9
+    }
+    if (c == '0') {
+        return HID_KEY_0;
+    }
+
+    switch (c) {
+        case ' ': return HID_KEY_SPACEBAR; // Spacebar
+        case '-': return HID_KEY_MINUS;
+        case '=': return HID_KEY_EQUAL;
+        case '[': return HID_KEY_LEFT_BRKT;
+        case ']': return HID_KEY_RIGHT_BRKT;
+        case '\\': return HID_KEY_BACK_SLASH;
+        case ';': return HID_KEY_SEMI_COLON;
+        case '\'': return HID_KEY_SGL_QUOTE;
+        case ',': return HID_KEY_COMMA;
+        case '.': return HID_KEY_DOT;
+        case '/': return HID_KEY_FWD_SLASH;
+
+        // Shifted characters
+        case '!': *shift = true; return HID_KEY_1;
+        case '@': *shift = true; return HID_KEY_2;
+        case '#': *shift = true; return HID_KEY_3;
+        case '$': *shift = true; return HID_KEY_4;
+        case '%': *shift = true; return HID_KEY_5;
+        case '^': *shift = true; return HID_KEY_6;
+        case '&': *shift = true; return HID_KEY_7;
+        case '*': *shift = true; return HID_KEY_8;
+        case '(': *shift = true; return HID_KEY_9;
+        case ')': *shift = true; return HID_KEY_0;
+        case '_': *shift = true; return HID_KEY_MINUS;
+        case '+': *shift = true; return HID_KEY_EQUAL;
+        case '{': *shift = true; return HID_KEY_LEFT_BRKT;
+        case '}': *shift = true; return HID_KEY_RIGHT_BRKT;
+        case '|': *shift = true; return HID_KEY_BACK_SLASH;
+        case ':': *shift = true; return HID_KEY_SEMI_COLON;
+        case '"': *shift = true; return HID_KEY_SGL_QUOTE;
+        case '<': *shift = true; return HID_KEY_COMMA;
+        case '>': *shift = true; return HID_KEY_DOT;
+        case '?': *shift = true; return HID_KEY_FWD_SLASH;
+        default: *shift = true; return HID_KEY_MINUS; // use underscore as default
+    }
 }

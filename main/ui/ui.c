@@ -6,6 +6,8 @@
 
 #include "item_registry.h"
 
+#include "my_bt.h"
+
 static const char *TAG = "UI";
 
 typedef struct {
@@ -87,6 +89,7 @@ static void device_list_item_cb(lv_event_t *e) {
 static void password_list_item_cb(lv_event_t *e) {
     if (list_item_cb(e, &password_tab, &password_registry_common)) {
         ESP_LOGI(TAG, "passwords_tab.selected_item %d", password_tab.selected_item);
+        bt_hid_send_keyboard_string_sequence(password_registry_common.get_name(password_tab.selected_item));
     }
 }
 
