@@ -6,14 +6,14 @@ static const char *TAG = "MYBT";
 #define CHAR_DECLARATION_SIZE   (sizeof(uint8_t))
 
 static uint16_t hid_conn_id = 0;
-static bool device_connected = false;
 static volatile bool known_device_advertised = false;
+static bool device_connected = false;
 
 static bt_api_callbacks_t *api_callbacks;
 
 static uint8_t ascii_to_hid(uint8_t c, bool *shift);
 
-#define HIDD_DEVICE_NAME            "HID Test"
+#define HIDD_DEVICE_NAME "Secure Keyboard"
 static uint8_t hidd_service_uuid128[] = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
     //first uuid, 16bit, [12],[13] is the value

@@ -4,9 +4,8 @@
 #include "ui_styles.h"
 #include "ui_internal.h"
 
-#include "item_registry.h"
-
-#include "my_bt.h"
+#include "registry/item_registry.h"
+#include "bt/my_bt.h"
 
 static const char *TAG = "UI";
 
@@ -22,7 +21,6 @@ static tab_components_t password_tab;
 
 static lv_obj_t* tabview;
 //static lv_obj_t* loading_overlay;
-static ui_api_callbacks_t* api_callbacks;
 static lv_obj_t *toast = NULL;
 static lv_timer_t *timer = NULL;
 
@@ -82,7 +80,8 @@ static bool list_item_cb(lv_event_t *e, tab_components_t* tab_data, registry_api
 static void device_list_item_cb(lv_event_t *e) {
     if (list_item_cb(e, &device_tab, &device_registry_common)) {
         ESP_LOGI(TAG, "devices_tab.selected_item %d", device_tab.selected_item);
-        api_callbacks->connect_to_device(device_tab.selected_item);
+        device_entry_t *device = device_registry_get_by_index(device_tab.selected_item);
+        bt_direct_advertizing(device->addr, device->addr_type);
     }
 }
 
@@ -108,12 +107,12 @@ static void password_edit_cb(lv_event_t *e) {
 static void device_add_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Add device");
     pair_device_dialog_show();
-    api_callbacks->pairing_initiated();
+    bt_start_advertising();
 }
 
 static void device_delete_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Delete device");
-    device_registry_common.remove(device_tab.selected_item);
+    device_registry_remove_device(device_tab.selected_item);
     lv_obj_remove_state(lv_obj_get_child(device_tab.list, device_tab.selected_item), LV_STATE_CHECKED);
     device_tab.selected_item = -1;
     updale_list_items(device_tab.list, &device_registry_common, device_list_item_cb, LV_SYMBOL_BLUETOOTH);
@@ -125,7 +124,7 @@ static void device_disconnect_cb(lv_event_t *e) {
     lv_obj_remove_state(lv_obj_get_child(device_tab.list, device_tab.selected_item), LV_STATE_CHECKED);
     device_tab.selected_item = -1;
     evaluate_buttons_state();
-    api_callbacks->disconnect();
+    bt_disconnect(current_device.addr);
     ESP_LOGI(TAG, "Click: Disconnect device");
 }
 
@@ -236,10 +235,8 @@ void show_toast(const char *message, bool is_error, uint32_t duration_ms) {
 }
 
 
-void init_ui(ui_api_callbacks_t *callbacks) {
+void init_ui() {
     ESP_LOGI(TAG, "init_ui()");
-
-    api_callbacks = callbacks;
 
     tabview = lv_tabview_create(lv_screen_active());
     style_tabview(tabview);
@@ -256,7 +253,7 @@ void init_ui(ui_api_callbacks_t *callbacks) {
 
     evaluate_buttons_state();
 
-    pair_device_dialog_init(callbacks);
+    pair_device_dialog_init();
 
     //loading_overlay = create_loading_overlay();
     //lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);

@@ -4,6 +4,9 @@
 #include "ui.h"
 #include "keyboard.h"
 
+#include "registry/item_registry.h"
+#include "bt/my_bt.h"
+
 static const char *TAG = "PAIR_DIALOG";
 
 static lv_obj_t* dialog = NULL;
@@ -13,8 +16,6 @@ static lv_obj_t* save_button = NULL;
 static lv_obj_t* cancel_button = NULL;
 static lv_obj_t* name_input = NULL;
 static lv_obj_t* kb = NULL;
-
-static ui_api_callbacks_t *api_callbacks;
 
 static bool paired = false;
 
@@ -38,13 +39,19 @@ static void apply_styles() {
 static void cancel_dialog_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Close dialog");
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
-    api_callbacks->cancel_pairing();
+    bt_stop_advertising();
 }
 
 static void save_new_device_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Save new device");
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
-    api_callbacks->save_new_device(lv_textarea_get_text(name_input));
+    
+    const char * name = lv_textarea_get_text(name_input);
+    strcpy(current_device.name, name);
+    
+    device_registry_add_new_device(&current_device);
+    int index = device_registry_get_index_by_name(name);
+    ui_on_new_device_saved(index);
 }
 
 static void evaluate_save_button_state() {
@@ -81,11 +88,10 @@ void pair_device_dialog_show() {
     evaluate_save_button_state();
 }
 
-void pair_device_dialog_init(ui_api_callbacks_t *callbacks) {
+void pair_device_dialog_init() {
     if (dialog != NULL) {
         return;
     }
-    api_callbacks = callbacks;
     dialog = lv_obj_create(lv_scr_act());
     lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);

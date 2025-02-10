@@ -6,7 +6,7 @@
 static password_entry* passwords;
 static int count;
 
-static void load() {
+void password_registry_load() {
     count = 10;
     passwords = (password_entry *)malloc(count * sizeof(password_entry));
 
@@ -31,6 +31,4 @@ static void destroy() {
 registry_api_t password_registry_common = {
     .get_name = get_name,
     .get_count = get_stored_passwords_count,
-    .load = load,
-    .destroy = destroy
 };

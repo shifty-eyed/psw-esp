@@ -32,6 +32,12 @@
         "string.h": "c",
         "cstring": "c",
         "compare": "c",
-        "ratio": "c"
+        "ratio": "c",
+        "chrono": "c",
+        "text_encoding": "c",
+        "typeinfo": "c",
+        "bitset": "c",
+        "algorithm": "c",
+        "format": "c"
     }
 }
