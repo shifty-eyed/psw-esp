@@ -38,7 +38,7 @@ static void evaluate_buttons_state() {
         lv_obj_remove_state(device_tab.toolbar_button[BTN_DEVICE_DELETE], LV_STATE_DISABLED);
         lv_obj_remove_state(device_tab.toolbar_button[BTN_DEVICE_DISCONNECT], LV_STATE_DISABLED);
     } else {
-        lv_obj_add_state(password_tab_btn, LV_STATE_DISABLED);
+        //lv_obj_add_state(password_tab_btn, LV_STATE_DISABLED);
         lv_obj_add_state(device_tab.toolbar_button[BTN_DEVICE_DELETE], LV_STATE_DISABLED);
         lv_obj_add_state(device_tab.toolbar_button[BTN_DEVICE_DISCONNECT], LV_STATE_DISABLED);
     }
@@ -88,20 +88,22 @@ static void device_list_item_cb(lv_event_t *e) {
 static void password_list_item_cb(lv_event_t *e) {
     if (list_item_cb(e, &password_tab, &password_registry_common)) {
         ESP_LOGI(TAG, "passwords_tab.selected_item %d", password_tab.selected_item);
-        bt_hid_send_keyboard_string_sequence(password_registry_common.get_name(password_tab.selected_item));
     }
-}
-
-static void password_add_cb(lv_event_t *e) {
-    ESP_LOGI(TAG, "Click: Add password");
 }
 
 static void password_use_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Use password");
+    bt_hid_send_keyboard_string_sequence(password_registry_common.get_name(password_tab.selected_item));
+}
+
+static void password_add_cb(lv_event_t *e) {
+    ESP_LOGI(TAG, "Click: New password");
+    edit_password_dialog_show(NULL);
 }
 
 static void password_edit_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Edit password");
+    edit_password_dialog_show(password_registry_get_entry_by_index(password_tab.selected_item));
 }
 
 static void device_add_cb(lv_event_t *e) {
@@ -194,14 +196,6 @@ void tab_switch_event_cb(lv_event_t * e) {
     evaluate_buttons_state();
 }
 
-static lv_obj_t * create_loading_overlay() {
-    lv_obj_t * overlay = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(overlay, SCREEN_W, SCREEN_H);
-    lv_obj_t *spinner = lv_spinner_create(overlay);
-    style_loading_overlay(overlay, spinner);
-    return overlay;
-}
-
 static void toast_timer_cb(lv_timer_t *t) {
     lv_obj_delete(toast);
     lv_timer_delete(timer);
@@ -254,7 +248,5 @@ void init_ui() {
     evaluate_buttons_state();
 
     pair_device_dialog_init();
-
-    //loading_overlay = create_loading_overlay();
-    //lv_obj_add_flag(loading_overlay, LV_OBJ_FLAG_HIDDEN);
+    edit_password_dialog_init();
 }

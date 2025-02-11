@@ -44,7 +44,6 @@ static bt_api_callbacks_t bt_api_callbacks = {
 /*
 TODO:
 
-- registry should use lookup by name and don't rewrite everything
 - make ui button to type password
 - make ui for new password generation
 - make ui for password change

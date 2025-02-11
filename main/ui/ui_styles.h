@@ -58,15 +58,4 @@ static void style_floating_button(lv_obj_t *btn, int position) {
     lv_obj_set_style_text_font(btn, lv_theme_get_font_large(btn), 0);
 }
 
-static void style_loading_overlay(lv_obj_t *overlay, lv_obj_t *spinner) {
-    lv_obj_set_style_bg_color(overlay, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(overlay, LV_OPA_50, LV_PART_MAIN);
-    lv_obj_remove_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_border_side(overlay, LV_BORDER_SIDE_NONE, 0);
-
-    lv_obj_set_size(spinner, 50, 50);
-    lv_obj_center(spinner);
-    lv_spinner_set_anim_params(spinner, 5000, 200);
-}
-
 #endif

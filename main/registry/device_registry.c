@@ -7,7 +7,7 @@
 #include "item_registry.h"
 #include "my_nvs.h"
 
-static const char *TAG = "DEVICE_REGISTRY";
+static const char *TAG = "DEV_REG";
 
 static device_entry_t* devices = NULL;
 static int16_t count;
