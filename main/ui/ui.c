@@ -232,6 +232,14 @@ void show_toast(const char *message, bool is_error, uint32_t duration_ms) {
 void init_ui() {
     ESP_LOGI(TAG, "init_ui()");
 
+    lv_theme_t *theme = lv_theme_default_init(lv_display_get_default(),
+                                          lv_palette_main(LV_PALETTE_BLUE),
+                                          lv_palette_main(LV_PALETTE_RED),
+                                          true,  // Dark mode
+                                          LV_FONT_DEFAULT);
+    lv_display_set_theme(lv_display_get_default(), theme);
+
+
     tabview = lv_tabview_create(lv_screen_active());
     style_tabview(tabview);
 
