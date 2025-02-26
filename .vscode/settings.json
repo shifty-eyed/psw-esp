@@ -38,6 +38,7 @@
         "typeinfo": "c",
         "bitset": "c",
         "algorithm": "c",
-        "format": "c"
+        "format": "c",
+        "stdlib.h": "c"
     }
 }

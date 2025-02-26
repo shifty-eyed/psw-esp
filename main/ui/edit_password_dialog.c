@@ -40,24 +40,24 @@ static void delete_entry_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Delete password");
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
     password_registry_remove_password(current_editing_entry.id);
+    ui_on_password_dialog_closed(-1);
 }
 
 static void save_password_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Save new password");
     lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
     
-    const char * password = lv_textarea_get_text(input_password);
-    strcpy(current_editing_entry.password, password);
-    strcpy(current_editing_entry.name, "New Password");
+    strcpy(current_editing_entry.password, lv_textarea_get_text(input_password));
+    strcpy(current_editing_entry.name, lv_textarea_get_text(input_name));
 
     if (current_editing_entry.id == 0) {
         password_registry_add_new_password(&current_editing_entry);
     } else {
         password_registry_update_password(&current_editing_entry);
     }
-    
-    //int index = device_registry_get_index_by_name(name);
-    //ui_on_new_device_saved(index);
+
+    int index = password_registry_get_index_by_id(current_editing_entry.id);
+    ui_on_password_dialog_closed(index);
 }
 
 static void btn_set_enabled(lv_obj_t *btn, bool enabled) {
@@ -126,8 +126,7 @@ static void generate_password_cb(lv_event_t *e) {
     bool use_numbers = lv_obj_get_state(generate_use_numbers) & LV_STATE_CHECKED;
     bool use_symbols_set1 = lv_obj_get_state(generate_use_symbols_set1) & LV_STATE_CHECKED;
     bool use_symbols_set2 = lv_obj_get_state(generate_use_symbols_set2) & LV_STATE_CHECKED;
-    //generate_password(password, length, use_numbers, use_symbols_set1, use_symbols_set2);
-    sprintf(password, "%d-%s-%s-%s", length, use_numbers ? "12" : "_", use_symbols_set1 ? "+=" : "_", use_symbols_set2 ? "<>" : "_");
+    password_registry_generate_password(password, length, use_numbers, use_symbols_set1, use_symbols_set2);
     lv_textarea_set_text(input_password, password);
     evaluate_save_button_state();
 }

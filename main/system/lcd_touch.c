@@ -91,7 +91,7 @@ err:
     return ret;
 }
 
-static void example_lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
+static void lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     esp_lcd_touch_handle_t tp = (esp_lcd_touch_handle_t)lv_indev_get_user_data(indev);
     assert(tp);
 
@@ -99,21 +99,35 @@ static void example_lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     uint16_t tp_y;
     static uint16_t prev_x = 0;
     static uint16_t prev_y = 0;
+    static bool already_pressed = false;
+    static bool already_released = false;
+
     uint8_t tp_cnt = 0;
     /* Read data from touch controller into memory */
     esp_lcd_touch_read_data(tp);
     /* Read data from touch controller */
     bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &tp_x, &tp_y, NULL, &tp_cnt, 1);
     if (tp_pressed && tp_cnt > 0) {
+        already_released = false;
+        if (already_pressed) {
+            return;
+        }
         data->point.x = prev_x = tp_x;
         data->point.y = prev_y = tp_y;
         data->state = LV_INDEV_STATE_PRESSED;
-        ESP_LOGD(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
+        already_pressed = true;
+        ESP_LOGW(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
     }
     else {
+        already_pressed = false;
+        if (already_released) {
+            return;
+        }
         data->point.x = prev_x;
         data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
+        ESP_LOGW(TAG, "Touch Released: %d,%d", prev_x, prev_y);
+        already_released = true;
     }
 }
 
@@ -226,7 +240,7 @@ void init_lcd_and_touch(void) {
     ESP_ERROR_CHECK(app_lvgl_init());
 
     lv_indev_t *indev_touch = lv_indev_create();
-    lv_indev_set_read_cb(indev_touch, example_lvgl_touch_cb);
+    lv_indev_set_read_cb(indev_touch, lvgl_touch_cb);
     lv_indev_set_user_data(indev_touch, tp);
     lv_indev_set_type(indev_touch, LV_INDEV_TYPE_POINTER);
     //lv_indev_set_mode(indev_touch, LV_INDEV_MODE_EVENT);

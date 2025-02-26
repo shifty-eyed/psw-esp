@@ -25,6 +25,8 @@ void ui_on_known_device_connected(int index);
 void ui_on_new_device_saved(int index);
 void ui_on_new_device_paired();
 
+void ui_on_password_dialog_closed(int index);
+
 
 
 #endif // UI_H

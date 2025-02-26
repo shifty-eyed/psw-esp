@@ -93,7 +93,8 @@ static void password_list_item_cb(lv_event_t *e) {
 
 static void password_use_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Use password");
-    bt_hid_send_keyboard_string_sequence(password_registry_common.get_name(password_tab.selected_item));
+    password_entry_t *entry = password_registry_get_entry_by_index(password_tab.selected_item);
+    bt_hid_send_keyboard_string_sequence(entry->password);
 }
 
 static void password_add_cb(lv_event_t *e) {
@@ -157,6 +158,12 @@ void ui_on_new_device_saved(int index) {
 
 void ui_on_new_device_paired() { //this is called while dialog has open
     pair_device_dialog_on_pairing_succeeded();
+}
+
+void ui_on_password_dialog_closed(int index) {
+    show_toast(index > 0 ? "Password saved" : "Password deleted", false, 1000);
+    updale_list_items(password_tab.list, &password_registry_common, password_list_item_cb, LV_SYMBOL_KEYBOARD);
+    select_list_item(&password_tab, index);
 }
 
 static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int position, lv_event_cb_t cb) {
@@ -232,13 +239,13 @@ void show_toast(const char *message, bool is_error, uint32_t duration_ms) {
 void init_ui() {
     ESP_LOGI(TAG, "init_ui()");
 
-    lv_theme_t *theme = lv_theme_default_init(lv_display_get_default(),
-                                          lv_palette_main(LV_PALETTE_BLUE),
-                                          lv_palette_main(LV_PALETTE_RED),
-                                          true,  // Dark mode
-                                          LV_FONT_DEFAULT);
+    lv_theme_t *theme = lv_theme_default_init(
+        lv_display_get_default(),
+        lv_palette_main(LV_PALETTE_BLUE),
+        lv_palette_main(LV_PALETTE_RED),
+        true,  // Dark mode
+        LV_FONT_DEFAULT);
     lv_display_set_theme(lv_display_get_default(), theme);
-
 
     tabview = lv_tabview_create(lv_screen_active());
     style_tabview(tabview);

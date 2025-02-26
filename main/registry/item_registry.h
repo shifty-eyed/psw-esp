@@ -5,7 +5,7 @@
 #include "esp_bt_defs.h"
 
 #define NAME_MAX_LENGTH 32
-#define PASSWORD_MAX_LENGTH 128
+#define PASSWORD_MAX_LENGTH 32
 
 typedef struct {
     char* (*get_name)(int i);
@@ -41,11 +41,13 @@ typedef struct {
     char password[PASSWORD_MAX_LENGTH];
 } password_entry_t;
 
+void password_registry_generate_password(char* result, int length, bool use_numbers, bool use_symbols_set1, bool use_symbols_set2);
 void password_registry_load();
 void password_registry_add_new_password(password_entry_t* entry);
 void password_registry_update_password(password_entry_t* entry);
 void password_registry_remove_password(uint16_t id);
 password_entry_t* password_registry_get_entry_by_index(int i);
+int password_registry_get_index_by_id(uint16_t id);
 
 
 #endif // PASSWORD_REGISTRY_H
