@@ -10,7 +10,7 @@
 
 static const char *TAG = "PSW_REG";
 
-#define MAX_ENTRIES (64)
+#define MAX_ENTRIES (128)
 #define NVS_STORAGE_NAME "psw_storage"
 #define NVS_KEY_COUNT "psw_count"
 #define NVS_KEY_FORMAT "psw_%d"
@@ -21,7 +21,7 @@ static const char* GEN_SYMBOLS_SET1 = "!@#$%*_+-=";
 static const char* GEN_SYMBOLS_SET2 = "?&()^[]{};:,.<>~|/\\";
 
 static password_entry_t* entries = NULL;
-static int count;
+static int16_t count;
 
 void password_registry_generate_password(char* result, int length, bool use_numbers, bool use_symbols_set1, bool use_symbols_set2) {
     char* charset = (char*)malloc(sizeof(char) * (strlen(GEN_LETTERS) + strlen(GEN_SYMBOLS_SET1) + strlen(GEN_SYMBOLS_SET2) + strlen(GEN_NUMBERS) + 1));
@@ -68,6 +68,9 @@ void password_registry_load() {
         ESP_LOGE(TAG, "Error allocating memory for password entries");
         return;
     }
+    ESP_LOGI(TAG, "Allocated memory for passwords, count: %d, entry size:%d, total memory: %d bytes",
+        MAX_ENTRIES, sizeof(password_entry_t), MAX_ENTRIES * sizeof(password_entry_t));
+
 
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
     count = my_nvs_get_i16(my_handle, NVS_KEY_COUNT);
@@ -76,7 +79,7 @@ void password_registry_load() {
         do {
             sprintf(key, NVS_KEY_FORMAT, ++id);
         } while (nvs_find_key(my_handle, key, NULL) == ESP_ERR_NOT_FOUND);
-
+        
         size_t required_size;
         err = nvs_get_blob(my_handle, key, NULL, &required_size);
         if (err != ESP_OK) {
@@ -84,7 +87,9 @@ void password_registry_load() {
             continue;
         }
         if (required_size != sizeof(password_entry_t)) {
-            ESP_LOGE(TAG, "Invalid password data size: %d", required_size);
+            ESP_LOGE(TAG, "Invalid password data size: %d, required: %d", required_size, sizeof(password_entry_t));
+            my_nvs_erase_key(my_handle, key);
+            nvs_commit(my_handle);
             continue;
         }
         err = nvs_get_blob(my_handle, key, &entries[i], &required_size);
@@ -98,6 +103,7 @@ void password_registry_load() {
     nvs_close(my_handle);
     if (count != loaded_count) {
         ESP_LOGE(TAG, "Loaded %d passwords of %d", loaded_count, count);
+        count = loaded_count;
     } else {
         ESP_LOGI(TAG, "Loaded %d passwords", loaded_count);
     }
@@ -120,30 +126,24 @@ void password_registry_add_new_password(password_entry_t* entry) {
     char key[16];
     uint16_t id = get_next_id();
     sprintf(key, NVS_KEY_FORMAT, id);
+    ESP_LOGW(TAG, "Saving psw with key: %s", key);
 
     if (count >= MAX_ENTRIES) {
         ESP_LOGE(TAG, "Password registry full, max: %d", MAX_ENTRIES);
         return;
     }
     entry->id = id;
-
-    //TODO: fix password saving issue, compare once again with devices
-    // save password generation settings
-    // focus on the name by default when opening the dialog
-    // epic: make ui better response to touch
-
-    //entries[count] = *entry;
-    memcpy(&entries[count], entry, sizeof(password_entry_t));
+    entries[count] = *entry;
     count++;
     
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
     my_nvs_set_i16(my_handle, NVS_KEY_COUNT, count);
-    err = nvs_set_blob(my_handle, key, entry, sizeof(device_entry_t));
+    err = nvs_set_blob(my_handle, key, entry, sizeof(password_entry_t));
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error (%s) saving password data!\n", esp_err_to_name(err));
     }
     my_nvs_commit_and_close(my_handle);
-    ESP_LOGI(TAG, "New Device Saved, name=%s, id=%d, total count %d", entry->name, id, count);
+    ESP_LOGI(TAG, "New Passowrd Saved, name=%s, id=%d, total count %d", entry->name, id, count);
 }
 
 void password_registry_update_password(password_entry_t* entry) {
@@ -153,7 +153,7 @@ void password_registry_update_password(password_entry_t* entry) {
     sprintf(key, NVS_KEY_FORMAT, entry->id);
 
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
-    err = nvs_set_blob(my_handle, key, entry, sizeof(device_entry_t));
+    err = nvs_set_blob(my_handle, key, entry, sizeof(password_entry_t));
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error (%s) updating password data!\n", esp_err_to_name(err));
     }

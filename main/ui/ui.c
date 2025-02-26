@@ -53,14 +53,16 @@ static void evaluate_buttons_state() {
 }
 
 static bool select_list_item(tab_components_t* tab_data, int index) {
-    lv_obj_t * obj_to_select = lv_obj_get_child(tab_data->list, index);
-    if (obj_to_select == NULL || tab_data->selected_item == index) {
+    if (tab_data->selected_item == index) {
         return false;
     }
     if (tab_data->selected_item >= 0) {
         lv_obj_remove_state(lv_obj_get_child(tab_data->list, tab_data->selected_item), LV_STATE_CHECKED);
     }
-    lv_obj_add_state(obj_to_select, LV_STATE_CHECKED);
+    lv_obj_t * obj_to_select = lv_obj_get_child(tab_data->list, index);
+    if (obj_to_select != NULL) {
+        lv_obj_add_state(obj_to_select, LV_STATE_CHECKED);
+    }
     tab_data->selected_item = index;
     evaluate_buttons_state();
     return true;
@@ -161,7 +163,7 @@ void ui_on_new_device_paired() { //this is called while dialog has open
 }
 
 void ui_on_password_dialog_closed(int index) {
-    show_toast(index > 0 ? "Password saved" : "Password deleted", false, 1000);
+    show_toast(index >= 0 ? "Password saved" : "Password deleted", false, 1000);
     updale_list_items(password_tab.list, &password_registry_common, password_list_item_cb, LV_SYMBOL_KEYBOARD);
     select_list_item(&password_tab, index);
 }

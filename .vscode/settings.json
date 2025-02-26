@@ -39,6 +39,8 @@
         "bitset": "c",
         "algorithm": "c",
         "format": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "esp_lcd_touch_cst816s.h": "c",
+        "my_nvs.h": "c"
     }
 }

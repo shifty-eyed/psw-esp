@@ -47,3 +47,24 @@ int16_t my_nvs_get_i16(nvs_handle_t my_handle, const char *key) {
     return value;
 }
 
+void my_nvs_save_password_dialog_settings(int length, bool use_numbers, bool use_symbols_set1, bool use_symbols_set2) {
+    nvs_handle_t my_handle;
+    my_nvs_open(&my_handle, "password_dialog");
+    my_nvs_set_i16(my_handle, "length", length);
+    my_nvs_set_i16(my_handle, "use_numbers", use_numbers);
+    my_nvs_set_i16(my_handle, "use_symbols1", use_symbols_set1);
+    my_nvs_set_i16(my_handle, "use_symbols2", use_symbols_set2);
+    my_nvs_commit_and_close(my_handle);
+}
+
+void my_nvs_load_password_dialog_settings(int *length, bool *use_numbers, bool *use_symbols_set1, bool *use_symbols_set2) {
+    nvs_handle_t my_handle;
+    my_nvs_open(&my_handle, "password_dialog");
+    *length = my_nvs_get_i16(my_handle, "length");
+    *use_numbers = my_nvs_get_i16(my_handle, "use_numbers");
+    *use_symbols_set1 = my_nvs_get_i16(my_handle, "use_symbols1");
+    *use_symbols_set2 = my_nvs_get_i16(my_handle, "use_symbols2");
+    nvs_close(my_handle);
+}
+
+

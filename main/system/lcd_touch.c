@@ -30,38 +30,38 @@ static esp_err_t app_lcd_init(void) {
     /* LCD backlight */
     gpio_config_t bk_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << EXAMPLE_LCD_GPIO_BL};
+        .pin_bit_mask = 1ULL << BOARD_LCD_GPIO_BL};
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
 
     /* LCD initialization */
     ESP_LOGD(TAG, "Initialize SPI bus");
     const spi_bus_config_t buscfg = {
-        .sclk_io_num = EXAMPLE_LCD_GPIO_SCLK,
-        .mosi_io_num = EXAMPLE_LCD_GPIO_MOSI,
+        .sclk_io_num = BOARD_LCD_GPIO_SCLK,
+        .mosi_io_num = BOARD_LCD_GPIO_MOSI,
         .miso_io_num = GPIO_NUM_NC,
         .quadwp_io_num = GPIO_NUM_NC,
         .quadhd_io_num = GPIO_NUM_NC,
-        .max_transfer_sz = EXAMPLE_LCD_H_RES * EXAMPLE_LCD_DRAW_BUFF_HEIGHT * sizeof(uint16_t),
+        .max_transfer_sz = BOARD_LCD_H_RES * BOARD_LCD_DRAW_BUFF_HEIGHT * sizeof(uint16_t),
     };
-    ESP_RETURN_ON_ERROR(spi_bus_initialize(EXAMPLE_LCD_SPI_NUM, &buscfg, SPI_DMA_CH_AUTO), TAG, "SPI init failed");
+    ESP_RETURN_ON_ERROR(spi_bus_initialize(BOARD_LCD_SPI_NUM, &buscfg, SPI_DMA_CH_AUTO), TAG, "SPI init failed");
 
     ESP_LOGD(TAG, "Install panel IO");
     const esp_lcd_panel_io_spi_config_t io_config = {
-        .dc_gpio_num = EXAMPLE_LCD_GPIO_DC,
-        .cs_gpio_num = EXAMPLE_LCD_GPIO_CS,
-        .pclk_hz = EXAMPLE_LCD_PIXEL_CLK_HZ,
-        .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
-        .lcd_param_bits = EXAMPLE_LCD_PARAM_BITS,
+        .dc_gpio_num = BOARD_LCD_GPIO_DC,
+        .cs_gpio_num = BOARD_LCD_GPIO_CS,
+        .pclk_hz = BOARD_LCD_PIXEL_CLK_HZ,
+        .lcd_cmd_bits = BOARD_LCD_CMD_BITS,
+        .lcd_param_bits = BOARD_LCD_PARAM_BITS,
         .spi_mode = 0,
         .trans_queue_depth = 10,
     };
-    ESP_GOTO_ON_ERROR(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)EXAMPLE_LCD_SPI_NUM, &io_config, &lcd_io), err, TAG, "New panel IO failed");
+    ESP_GOTO_ON_ERROR(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)BOARD_LCD_SPI_NUM, &io_config, &lcd_io), err, TAG, "New panel IO failed");
 
     ESP_LOGD(TAG, "Install LCD driver");
     const esp_lcd_panel_dev_config_t panel_config = {
-        .reset_gpio_num = EXAMPLE_LCD_GPIO_RST,
-        .color_space = EXAMPLE_LCD_COLOR_SPACE,
-        .bits_per_pixel = EXAMPLE_LCD_BITS_PER_PIXEL,
+        .reset_gpio_num = BOARD_LCD_GPIO_RST,
+        .color_space = BOARD_LCD_COLOR_SPACE,
+        .bits_per_pixel = BOARD_LCD_BITS_PER_PIXEL,
     };
     ESP_GOTO_ON_ERROR(esp_lcd_new_panel_st7789(lcd_io, &panel_config, &lcd_panel), err, TAG, "New panel failed");
 
@@ -71,7 +71,7 @@ static esp_err_t app_lcd_init(void) {
     esp_lcd_panel_disp_on_off(lcd_panel, true);
 
     /* LCD backlight on */
-    ESP_ERROR_CHECK(gpio_set_level(EXAMPLE_LCD_GPIO_BL, EXAMPLE_LCD_BL_ON_LEVEL));
+    ESP_ERROR_CHECK(gpio_set_level(BOARD_LCD_GPIO_BL, BOARD_LCD_BL_ON_LEVEL));
 
     esp_lcd_panel_set_gap(lcd_panel, 0, 20);
     esp_lcd_panel_invert_color(lcd_panel, true);
@@ -87,7 +87,7 @@ err:
     {
         esp_lcd_panel_io_del(lcd_io);
     }
-    spi_bus_free(EXAMPLE_LCD_SPI_NUM);
+    spi_bus_free(BOARD_LCD_SPI_NUM);
     return ret;
 }
 
@@ -99,7 +99,6 @@ static void lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     uint16_t tp_y;
     static uint16_t prev_x = 0;
     static uint16_t prev_y = 0;
-    static bool already_pressed = false;
     static bool already_released = false;
 
     uint8_t tp_cnt = 0;
@@ -107,26 +106,28 @@ static void lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     esp_lcd_touch_read_data(tp);
     /* Read data from touch controller */
     bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &tp_x, &tp_y, NULL, &tp_cnt, 1);
+    if (tp_x > BOARD_LCD_H_RES) {
+        tp_x = BOARD_LCD_H_RES;
+    }
+    if (tp_y > BOARD_LCD_V_RES) {
+        tp_y = BOARD_LCD_V_RES;
+    }
+
     if (tp_pressed && tp_cnt > 0) {
         already_released = false;
-        if (already_pressed) {
-            return;
-        }
         data->point.x = prev_x = tp_x;
         data->point.y = prev_y = tp_y;
         data->state = LV_INDEV_STATE_PRESSED;
-        already_pressed = true;
-        ESP_LOGW(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
+        ESP_LOGD(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
     }
     else {
-        already_pressed = false;
         if (already_released) {
             return;
         }
         data->point.x = prev_x;
         data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
-        ESP_LOGW(TAG, "Touch Released: %d,%d", prev_x, prev_y);
+        ESP_LOGD(TAG, "Touch Released: %d,%d", prev_x, prev_y);
         already_released = true;
     }
 }
@@ -147,10 +148,10 @@ static esp_err_t app_lvgl_init(void) {
     const lvgl_port_display_cfg_t disp_cfg = {
         .io_handle = lcd_io,
         .panel_handle = lcd_panel,
-        .buffer_size = EXAMPLE_LCD_H_RES * EXAMPLE_LCD_DRAW_BUFF_HEIGHT * sizeof(uint16_t),
-        .double_buffer = EXAMPLE_LCD_DRAW_BUFF_DOUBLE,
-        .hres = EXAMPLE_LCD_H_RES,
-        .vres = EXAMPLE_LCD_V_RES,
+        .buffer_size = BOARD_LCD_H_RES * BOARD_LCD_DRAW_BUFF_HEIGHT * sizeof(uint16_t),
+        .double_buffer = BOARD_LCD_DRAW_BUFF_DOUBLE,
+        .hres = BOARD_LCD_H_RES,
+        .vres = BOARD_LCD_V_RES,
         .monochrome = false,
         /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
         .rotation = {
@@ -170,7 +171,7 @@ static esp_err_t app_lvgl_init(void) {
 static esp_err_t bsp_display_brightness_init(void) {
     // Setup LEDC peripheral for PWM backlight control
     const ledc_channel_config_t LCD_backlight_channel = {
-        .gpio_num = EXAMPLE_LCD_GPIO_BL,
+        .gpio_num = BOARD_LCD_GPIO_BL,
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .channel = LCD_LEDC_CH,
         .intr_type = LEDC_INTR_DISABLE,
@@ -201,9 +202,9 @@ void init_lcd_and_touch(void) {
     esp_log_level_set("CST816S", ESP_LOG_NONE);
     const i2c_config_t i2c_conf = {
         .mode = I2C_MODE_MASTER,
-        .sda_io_num = EXAMPLE_PIN_NUM_TOUCH_SDA,
+        .sda_io_num = BOARD_PIN_NUM_TOUCH_SDA,
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = EXAMPLE_PIN_NUM_TOUCH_SCL,
+        .scl_io_num = BOARD_PIN_NUM_TOUCH_SCL,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = 100 * 1000,
     };
@@ -218,10 +219,10 @@ void init_lcd_and_touch(void) {
     esp_lcd_new_panel_io_i2c((esp_lcd_i2c_bus_handle_t)TOUCH_HOST, &tp_io_config, &tp_io_handle);
 
     const esp_lcd_touch_config_t tp_cfg = {
-        .x_max = EXAMPLE_LCD_H_RES,
-        .y_max = EXAMPLE_LCD_V_RES,
-        .rst_gpio_num = EXAMPLE_PIN_NUM_TOUCH_RST,
-        .int_gpio_num = EXAMPLE_PIN_NUM_TOUCH_INT,
+        .x_max = BOARD_LCD_H_RES,
+        .y_max = BOARD_LCD_V_RES,
+        .rst_gpio_num = BOARD_PIN_NUM_TOUCH_RST,
+        .int_gpio_num = BOARD_PIN_NUM_TOUCH_INT,
         .levels = {
             .reset = 0,
             .interrupt = 0,

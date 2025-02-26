@@ -9,13 +9,14 @@
 
 static const char *TAG = "DEV_REG";
 
-static device_entry_t* entries = NULL;
-static int16_t count;
 
 #define MAX_ENTRIES (16)
 #define NVS_STORAGE_NAME "device_storage"
 #define NVS_KEY_COUNT "device_count"
 #define NVS_KEY_FORMAT "dev_%d"
+
+static device_entry_t* entries = NULL;
+static int16_t count;
 
 device_entry_t current_device;
 
@@ -30,6 +31,10 @@ void device_registry_load() {
     ESP_LOGI(TAG, "Loading devices");
     if (entries == NULL) {
         entries = (device_entry_t *)malloc(MAX_ENTRIES * sizeof(device_entry_t));
+    }
+    if (entries == NULL) {
+        ESP_LOGE(TAG, "Error allocating memory for device entries");
+        return;
     }
 
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
@@ -61,6 +66,7 @@ void device_registry_load() {
     nvs_close(my_handle);
     if (count != loaded_count) {
         ESP_LOGE(TAG, "Loaded %d devices of %d", loaded_count, count);
+        count = loaded_count;
     } else {
         ESP_LOGI(TAG, "Loaded %d devices", loaded_count);
     }

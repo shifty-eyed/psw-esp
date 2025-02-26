@@ -4,8 +4,8 @@
 #include "lvgl.h"
 #include "ui.h"
 #include "keyboard.h"
-
 #include "registry/item_registry.h"
+#include "my_nvs.h"
 
 static const char *TAG = "PSW_DIALOG";
 
@@ -55,7 +55,11 @@ static void save_password_cb(lv_event_t *e) {
     } else {
         password_registry_update_password(&current_editing_entry);
     }
-
+    my_nvs_save_password_dialog_settings(atoi(lv_textarea_get_text(len_number_label)),
+        lv_obj_get_state(generate_use_numbers) & LV_STATE_CHECKED,
+        lv_obj_get_state(generate_use_symbols_set1) & LV_STATE_CHECKED,
+        lv_obj_get_state(generate_use_symbols_set2) & LV_STATE_CHECKED);
+    
     int index = password_registry_get_index_by_id(current_editing_entry.id);
     ui_on_password_dialog_closed(index);
 }
@@ -107,6 +111,11 @@ void edit_password_dialog_show(password_entry_t* initial_value) {
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_HIDDEN);
     lv_textarea_set_text(input_password, current_editing_entry.password);
     lv_textarea_set_text(input_name, current_editing_entry.name);
+
+    lv_tabview_set_active(tabview, 1, LV_ANIM_OFF);
+    lv_keyboard_set_textarea(kb, input_name);
+    lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_UPPER);
+
     evaluate_save_button_state();
 }
 
@@ -162,6 +171,12 @@ static void create_top_bar_buttons() {
 }
 
 static void create_tab_generate() {
+    int psw_length;
+    char length_str[4];
+    bool use_numbers, use_symbols_set1, use_symbols_set2;
+    my_nvs_load_password_dialog_settings(&psw_length, &use_numbers, &use_symbols_set1, &use_symbols_set2);
+    sprintf(length_str, "%d", psw_length);
+
     tab_generate = lv_tabview_add_tab(tabview, "Generate");
     lv_obj_set_style_margin_all(tab_generate, 0, 0);
     lv_obj_set_style_pad_hor(tab_generate, 15, 0);
@@ -194,7 +209,7 @@ static void create_tab_generate() {
         lv_obj_add_event_cb(len_decrease_button, len_change_cb, LV_EVENT_CLICKED, NULL);
     
         len_number_label = lv_textarea_create(length_generate_bar);
-        lv_textarea_set_text(len_number_label, "20");
+        lv_textarea_set_text(len_number_label, length_str);
         lv_textarea_set_one_line(len_number_label, true);
         lv_obj_remove_flag(len_number_label, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_remove_flag(len_number_label, LV_OBJ_FLAG_CLICK_FOCUSABLE);
@@ -209,15 +224,15 @@ static void create_tab_generate() {
 
     generate_use_numbers = lv_checkbox_create(tab_generate);
     lv_checkbox_set_text(generate_use_numbers, "Use numbers");
-    lv_obj_add_state(generate_use_numbers, LV_STATE_CHECKED);
+    lv_obj_add_state(generate_use_numbers, use_numbers ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
     
     generate_use_symbols_set1 = lv_checkbox_create(tab_generate);
     lv_checkbox_set_text(generate_use_symbols_set1, "Use symbols: -+=_!@#$%*");
-    lv_obj_add_state(generate_use_symbols_set1, LV_STATE_CHECKED);
+    lv_obj_add_state(generate_use_symbols_set1, use_symbols_set1 ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
 
     generate_use_symbols_set2 = lv_checkbox_create(tab_generate);
     lv_checkbox_set_text(generate_use_symbols_set2, "Use symbols: >,.';:?/|({[^");
-    lv_obj_add_state(generate_use_symbols_set2, LV_STATE_CHECKED);
+    lv_obj_add_state(generate_use_symbols_set2, use_symbols_set2 ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
 }
 
 
@@ -269,9 +284,5 @@ void edit_password_dialog_init() {
     kb = lv_my_keyboard_create(tab_type);
     lv_obj_set_size(kb,  SCREEN_W, SCREEN_H / 2);
     lv_obj_align(kb, LV_ALIGN_CENTER, 0, 0);
-    
-    lv_keyboard_set_textarea(kb, input_password);
-
-    //apply_styles();
 
 }
