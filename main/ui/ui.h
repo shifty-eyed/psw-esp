@@ -13,11 +13,13 @@
 #define TAB_BAR_H (30)
 #define TOOL_BAR_H (30)
 
-#define BTN_DEVICE_DELETE (1)
+#define BTN_DEVICE_DELETE (3)
 #define BTN_DEVICE_DISCONNECT (2)
-#define BTN_DEVICE_CONNECT (3)
+#define BTN_DEVICE_CONNECT (1)
 #define BTN_PASSWORD_EDIT (1)
-#define BTN_PASSWORD_DELETE (2)
+#define BTN_PASSWORD_APPLY (2)
+
+#define TOAST_DURATION (2000)
 
 void init_ui();
 

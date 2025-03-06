@@ -161,6 +161,10 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
     }
 }
 
+bool bt_is_connected() {
+    return device_connected;
+}
+
 void bt_start_advertising() {
     if (device_connected) {
         ESP_LOGW(TAG, "bt_start_advertising - Device already connected");
@@ -171,11 +175,11 @@ void bt_start_advertising() {
     esp_ble_gap_start_advertising(&pair_new_device_adv_params);
 }
 
-void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
+bool bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     esp_err_t err;
     if (device_connected) {
         ESP_LOGW(TAG, "bt_direct_advertizing - Device already connected");
-        return;
+        return false;
     }
     ESP_LOGW(TAG, "Starting direct advertising to %02X:%02X:%02X:%02X:%02X:%02X type=%d", 
         addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr_type);
@@ -188,6 +192,7 @@ void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
     memcpy(direct_adv_params.peer_addr, addr, sizeof(esp_bd_addr_t));
     
     esp_ble_gap_start_advertising(&direct_adv_params);
+    return true;
 }
 
 void bt_disconnect(esp_bd_addr_t connected_device_address) {

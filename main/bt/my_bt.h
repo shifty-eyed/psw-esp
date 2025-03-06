@@ -29,10 +29,11 @@ typedef struct {
     void (*on_device_connected)(esp_bd_addr_t bd_addr, esp_ble_addr_type_t addr_type, bool known_device);
 } bt_api_callbacks_t;
 
+bool bt_is_connected();
 void bt_start_advertising();
 void bt_stop_advertising();
 void bt_disconnect(esp_bd_addr_t connected_device_address);
-void bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type);
+bool bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type);
 
 void bt_hid_send_keyboard_string_sequence(const char *s);
 
