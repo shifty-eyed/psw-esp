@@ -1,5 +1,6 @@
 set(srcs "main.c"
          "system/lcd_touch.c"
+         "system/power_control.c"
          "bt/esp_hidd_prf_api.c"
          "bt/hid_dev.c"
          "bt/hid_device_le_prf.c"        

@@ -1,11 +1,14 @@
 #include "nvs_flash.h"
 
 #include "system/lcd_touch.h"
+#include "system/power_control.h"
 #include "registry/item_registry.h"
 #include "ui/ui.h"
 #include "bt/my_bt.h"
 
 static const char *TAG = "MAIN";
+
+#define SYS_EN_GPIO  GPIO_NUM_35
 
 /* Bluetooth module callbacks */
 static void on_device_connected(esp_bd_addr_t bd_addr, esp_ble_addr_type_t addr_type, bool known_device) {
@@ -43,8 +46,9 @@ static bt_api_callbacks_t bt_api_callbacks = {
 
 void app_main(void) {
     esp_err_t ret;
+    init_gpio_and_power_task();
     init_lcd_and_touch();
-    set_lcd_brightness(50);
+    set_lcd_brightness(40);
 
 
     // Initialize NVS.

@@ -41,6 +41,9 @@
         "format": "c",
         "stdlib.h": "c",
         "esp_lcd_touch_cst816s.h": "c",
-        "my_nvs.h": "c"
+        "my_nvs.h": "c",
+        "esp_lvgl_port.h": "c",
+        "task.h": "c",
+        "esp_event.h": "c"
     }
 }
