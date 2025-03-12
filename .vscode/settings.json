@@ -44,6 +44,8 @@
         "my_nvs.h": "c",
         "esp_lvgl_port.h": "c",
         "task.h": "c",
-        "esp_event.h": "c"
+        "esp_event.h": "c",
+        "cstdlib": "c",
+        "functional": "c"
     }
 }

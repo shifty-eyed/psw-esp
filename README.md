@@ -14,10 +14,8 @@ TBD
     password tab: 2 btn visible: apply, (...) -> create, delete, edit
 
 ## Password edit dialog
-    Separate entering name from password into 2 different pages
     always keep focus on text field, always show kb
-    use separate dialog for configuring password generation, the button next to GEN
-    remove tabs generate/type
+
 
 ## Refactoring
     merge the logic for registry
@@ -25,3 +23,5 @@ TBD
 
 ## Misc
     add brightness control
+    experiment with loading and deleting lvgl objects instead of visibilty
+

@@ -34,7 +34,7 @@ static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event
 
 static void evaluate_buttons_state() {
     lv_obj_t * tab_bar = lv_tabview_get_tab_bar(tabview);
-    lv_obj_t * password_tab_btn = lv_obj_get_child(tab_bar, 1);
+    //lv_obj_t * password_tab_btn = lv_obj_get_child(tab_bar, 1);
 
     bool connected = bt_is_connected();
     bool device_selected = device_tab.selected_item >= 0;
@@ -49,6 +49,27 @@ static void evaluate_buttons_state() {
     lv_show(password_tab.toolbar_button[BTN_PASSWORD_APPLY], password_selected);
 }
 
+lv_obj_t* mylv_create_container_flex(lv_obj_t* parent, lv_flex_flow_t flow, int32_t width, int32_t height) {
+    lv_obj_t* result = mylv_create_container(parent, width, height);
+    lv_obj_set_flex_flow(result, flow);
+    return result;
+}
+
+lv_obj_t* mylv_create_container(lv_obj_t* parent, int32_t width, int32_t height) {
+    lv_obj_t* result = lv_obj_create(parent);
+    lv_obj_set_style_pad_all(result, 0, 0);
+    lv_obj_set_style_border_side(result, LV_BORDER_SIDE_NONE, 0);
+    lv_obj_remove_flag(result, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(result, LV_OPA_0, 0);
+    if (width > 0) {
+        lv_obj_set_width(result, width);
+    }
+    if (height > 0) {
+        lv_obj_set_height(result, height);
+    }
+    return result;
+}
+
 void lv_enable(lv_obj_t *obj, bool enabled) {
     if (enabled) {
         lv_obj_remove_state(obj, LV_STATE_DISABLED);
@@ -60,8 +81,13 @@ void lv_enable(lv_obj_t *obj, bool enabled) {
 void lv_show(lv_obj_t *obj, bool visible) {
     if (visible) {
         lv_obj_remove_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
+        lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+
     } else {
         lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
+        lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE);
     }
 }
 

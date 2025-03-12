@@ -16,5 +16,7 @@ void show_spinner(bool show);
 
 void lv_enable(lv_obj_t *obj, bool enabled);
 void lv_show(lv_obj_t *obj, bool visible);
+lv_obj_t* mylv_create_container_flex(lv_obj_t *parent, lv_flex_flow_t flow, int32_t width, int32_t height);
+lv_obj_t* mylv_create_container(lv_obj_t* parent, int32_t width, int32_t height);
 
 #endif // UI_INTERNAL_H
