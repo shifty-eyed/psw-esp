@@ -12,6 +12,9 @@ static const char *TAG = "PSW_DIALOG";
 
 static password_entry_t current_editing_entry;
 
+static lv_group_t* group_input_password = NULL;
+static lv_group_t* group_input_name = NULL;
+
 static lv_obj_t* dialog = NULL;
 static lv_obj_t* save_button = NULL;
 static lv_obj_t* cancel_button = NULL;
@@ -33,26 +36,34 @@ static lv_obj_t* generate_button = NULL;
 
 static const lv_color_t delete_button_bg_color = { .red = 180, .green = 40, .blue = 40 };
 static const lv_color_t title_text_color = { .red = 255, .green = 255, .blue = 255 };
+static const lv_color_t text_input_bg_color = { .red = 60, .green = 60, .blue = 30 };
 
 static void next_page_button_cb(lv_event_t *e);
 static void prev_page_button_cb(lv_event_t *e);
 static void close_generate_settings_cb(lv_event_t *e);
 
+
+static void close_dialog() {
+    lv_show(dialog, false);
+    lv_group_focus_freeze(group_input_name, false);
+    lv_group_focus_freeze(group_input_password, false);
+}
+
 static void cancel_dialog_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Close dialog");
-    lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
+    close_dialog();
 }
 
 static void delete_entry_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Delete password");
-    lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
+    close_dialog();
     password_registry_remove_password(current_editing_entry.id);
     ui_on_password_dialog_closed(-1);
 }
 
 static void save_password_cb(lv_event_t *e) {
     ESP_LOGI(TAG, "Click: Save new password");
-    lv_obj_add_flag(dialog, LV_OBJ_FLAG_HIDDEN);
+    close_dialog();
     
     strcpy(current_editing_entry.password, lv_textarea_get_text(input_password));
     strcpy(current_editing_entry.name, lv_textarea_get_text(input_name));
@@ -90,13 +101,15 @@ static void text_input_cb(lv_event_t *e) {
     }
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
+    size_t len = strlen(lv_textarea_get_text(input_name));
 
-    if (code == LV_EVENT_CLICKED || code == LV_EVENT_FOCUSED) {
-        lv_keyboard_set_textarea(kb, ta);
-    }
     if (code == LV_EVENT_VALUE_CHANGED) {
-        if (ta == input_name && strlen(lv_textarea_get_text(input_name)) == 1) {
-            lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_LOWER);
+        if (ta == input_name) {
+            if (len == 1) {
+                lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_LOWER);
+            } else if (len == 0) {
+                lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_UPPER);
+            }
         }
         evaluate_save_button_state();
     }
@@ -110,11 +123,11 @@ void edit_password_dialog_show(password_entry_t* initial_value) {
         current_editing_entry.name[0] = '\0';
         current_editing_entry.password[0] = '\0';    
     }
-    lv_obj_remove_flag(dialog, LV_OBJ_FLAG_HIDDEN);
+    lv_show(dialog, true);
     lv_textarea_set_text(input_password, current_editing_entry.password);
     lv_textarea_set_text(input_name, current_editing_entry.name);
 
-    lv_keyboard_set_textarea(kb, input_name);
+    prev_page_button_cb(NULL);
     lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_TEXT_UPPER);
 
     evaluate_save_button_state();
@@ -168,6 +181,10 @@ static void next_page_button_cb(lv_event_t *e) {
     lv_show(container_input_name, false);
     lv_show(container_input_password, true);
     lv_keyboard_set_textarea(kb, input_password);
+
+    lv_group_focus_freeze(group_input_name, false);
+    lv_group_focus_obj(input_password);
+    lv_group_focus_freeze(group_input_password, true);
 }
 
 static void prev_page_button_cb(lv_event_t *e) {
@@ -175,6 +192,10 @@ static void prev_page_button_cb(lv_event_t *e) {
     lv_show(container_input_name, true);
     lv_show(container_input_password, false);
     lv_keyboard_set_textarea(kb, input_name);
+
+    lv_group_focus_freeze(group_input_password, false);
+    lv_group_focus_obj(input_name);
+    lv_group_focus_freeze(group_input_name, true);
 }
 
 static void create_top_bar_buttons() {
@@ -279,7 +300,7 @@ static void create_generate_settings_component() {
 
 static void create_input_name_component() {
     lv_obj_t* label;
-    container_input_name = mylv_create_container(dialog, SCREEN_W, 68);
+    container_input_name = mylv_create_container(dialog, SCREEN_W, 72);
     lv_obj_align(container_input_name, LV_ALIGN_TOP_MID, 0, 20);
     
     label = lv_label_create(container_input_name);
@@ -294,19 +315,21 @@ static void create_input_name_component() {
     lv_label_set_text(label, "Password >");
 
     input_name = lv_textarea_create(container_input_name);
-    lv_obj_set_size(input_name, SCREEN_W-15, 35);
+    lv_obj_set_size(input_name, SCREEN_W-15, 40);
     lv_obj_align(input_name, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_textarea_set_one_line(input_name, true);
     lv_textarea_set_cursor_click_pos(input_name, true);
-    lv_obj_set_style_pad_ver(input_name, 3, 0);
+    lv_obj_set_style_pad_ver(input_name, 4, 0);
     lv_obj_add_event_cb(input_name, text_input_cb, LV_EVENT_ALL, NULL);
+
+    lv_obj_set_style_bg_color(input_name, text_input_bg_color, 0);
 
 }
 
 static void create_input_password_component() {
     lv_obj_t* label;
 
-    container_input_password = mylv_create_container(dialog, SCREEN_W, 68);
+    container_input_password = mylv_create_container(dialog, SCREEN_W, 72);
     lv_obj_align(container_input_password, LV_ALIGN_TOP_MID, 0, 20);
 
     label = lv_label_create(container_input_password);
@@ -331,12 +354,13 @@ static void create_input_password_component() {
     lv_obj_set_style_bg_image_src(generate_button, LV_SYMBOL_REFRESH, 0);
 
     input_password = lv_textarea_create(container_input_password);
-    lv_obj_set_size(input_password, SCREEN_W - 15, 35);
+    lv_obj_set_size(input_password, SCREEN_W - 15, 40);
     lv_obj_align(input_password, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_textarea_set_placeholder_text(input_password, "Generate " LV_SYMBOL_REFRESH " or type");
     lv_textarea_set_one_line(input_password, true);
-    lv_obj_set_style_pad_ver(input_password, 3, 0);
+    lv_obj_set_style_pad_ver(input_password, 4, 0);
     lv_obj_add_event_cb(input_password, text_input_cb, LV_EVENT_ALL, NULL);
+    lv_obj_set_style_bg_color(input_password, text_input_bg_color, 0);
 }
 
 void edit_password_dialog_init() {
@@ -361,5 +385,12 @@ void edit_password_dialog_init() {
 
     kb = lv_my_keyboard_create(dialog);
     lv_obj_set_size(kb,  SCREEN_W, SCREEN_H / 2 + 30);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 5);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 15);
+
+    group_input_name = lv_group_create();
+    lv_group_add_obj(group_input_name, input_name);
+
+    group_input_password = lv_group_create();
+    lv_group_add_obj(group_input_password, input_password);
+
 }

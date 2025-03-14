@@ -166,6 +166,7 @@ void password_registry_remove_password(uint16_t id) {
     nvs_handle_t my_handle;
     char key[16];
     sprintf(key, NVS_KEY_FORMAT, id);
+    int index = password_registry_get_index_by_id(id);
 
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
     count--;
@@ -173,7 +174,6 @@ void password_registry_remove_password(uint16_t id) {
     my_nvs_erase_key(my_handle, key);
     my_nvs_commit_and_close(my_handle);
 
-    int index = password_registry_get_index_by_id(id);
     for (int j = index; j < count; j++) {
         entries[j] = entries[j + 1];
     }

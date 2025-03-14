@@ -33,7 +33,7 @@ const lv_color_t row_text_color = { .red = 240, .green = 240, .blue = 240 };
 static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
 
 static void evaluate_buttons_state() {
-    lv_obj_t * tab_bar = lv_tabview_get_tab_bar(tabview);
+    //lv_obj_t * tab_bar = lv_tabview_get_tab_bar(tabview);
     //lv_obj_t * password_tab_btn = lv_obj_get_child(tab_bar, 1);
 
     bool connected = bt_is_connected();
@@ -93,18 +93,24 @@ void lv_show(lv_obj_t *obj, bool visible) {
 
 static void unselect_list_item(tab_components_t* tab_data) {
     if (tab_data->selected_item >= 0) {
-        lv_obj_remove_state(lv_obj_get_child(tab_data->list, tab_data->selected_item), LV_STATE_CHECKED);
+        lv_obj_t* item = lv_obj_get_child(tab_data->list, tab_data->selected_item);
+        if (item != NULL) {
+            lv_obj_remove_state(item, LV_STATE_CHECKED);
+        }
     }
     tab_data->selected_item = -1;
     evaluate_buttons_state();
 }
 
 static bool select_list_item(tab_components_t* tab_data, int index) {
-    if (tab_data->selected_item == index) {
+    if (index < 0) {
         return false;
     }
     if (tab_data->selected_item >= 0) {
-        lv_obj_remove_state(lv_obj_get_child(tab_data->list, tab_data->selected_item), LV_STATE_CHECKED);
+        lv_obj_t* item = lv_obj_get_child(tab_data->list, tab_data->selected_item);
+        if (item != NULL) {
+            lv_obj_remove_state(item, LV_STATE_CHECKED);
+        }
     }
     lv_obj_t * obj_to_select = lv_obj_get_child(tab_data->list, index);
     if (obj_to_select != NULL) {
