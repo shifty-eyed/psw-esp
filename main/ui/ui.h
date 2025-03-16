@@ -29,6 +29,8 @@ void ui_on_new_device_paired();
 
 void ui_on_password_dialog_closed(int index);
 
+void init_touch_test_ui();
+
 
 
 #endif // UI_H

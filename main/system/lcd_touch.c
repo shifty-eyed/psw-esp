@@ -122,7 +122,7 @@ static void lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     }
     else {
         if (already_released) {
-            return;
+            //return;
         }
         data->point.x = prev_x;
         data->point.y = prev_y;

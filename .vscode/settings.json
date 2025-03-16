@@ -46,6 +46,8 @@
         "task.h": "c",
         "esp_event.h": "c",
         "cstdlib": "c",
-        "functional": "c"
+        "functional": "c",
+        "ui_internal.h": "c",
+        "esp_log.h": "c"
     }
 }
