@@ -91,43 +91,47 @@ err:
     return ret;
 }
 
+static uint16_t calibrate_x(uint16_t raw_x) {
+    return (uint16_t)(1.133 * raw_x - 11.33);
+}
+
+static uint16_t calibrate_y(uint16_t raw_y) {
+    return (uint16_t)(1.004 * raw_y - 1.004);
+}
+
 static void lvgl_touch_cb(lv_indev_t *indev, lv_indev_data_t *data) {
     esp_lcd_touch_handle_t tp = (esp_lcd_touch_handle_t)lv_indev_get_user_data(indev);
     assert(tp);
 
-    uint16_t tp_x;
-    uint16_t tp_y;
+
+    ESP_LOGD(TAG, "Touch callback");
+
+    uint16_t raw_x;
+    uint16_t raw_y;
     static uint16_t prev_x = 0;
     static uint16_t prev_y = 0;
     static bool already_released = false;
 
     uint8_t tp_cnt = 0;
-    /* Read data from touch controller into memory */
     esp_lcd_touch_read_data(tp);
-    /* Read data from touch controller */
-    bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &tp_x, &tp_y, NULL, &tp_cnt, 1);
-    if (tp_x > BOARD_LCD_H_RES) {
-        tp_x = BOARD_LCD_H_RES;
-    }
-    if (tp_y > BOARD_LCD_V_RES) {
-        tp_y = BOARD_LCD_V_RES;
-    }
+    bool tp_pressed = esp_lcd_touch_get_coordinates(tp, &raw_x, &raw_y, NULL, &tp_cnt, 1);
+
 
     if (tp_pressed && tp_cnt > 0) {
         already_released = false;
-        data->point.x = prev_x = tp_x;
-        data->point.y = prev_y = tp_y;
+        data->point.x = prev_x = calibrate_x(raw_x);
+        data->point.y = prev_y = calibrate_y(raw_y);
         data->state = LV_INDEV_STATE_PRESSED;
-        ESP_LOGD(TAG, "Touch Pressed: %d,%d", tp_x, tp_y);
+        ESP_LOGD(TAG, "Touch Pressed raw: %d,%d", raw_x, raw_y);
     }
     else {
         if (already_released) {
-            //return;
+            return;
         }
         data->point.x = prev_x;
         data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
-        ESP_LOGD(TAG, "Touch Released: %d,%d", prev_x, prev_y);
+        ESP_LOGD(TAG, "Touch Released raw: %d,%d", raw_x, raw_y);
         already_released = true;
     }
 }
@@ -219,8 +223,8 @@ void init_lcd_and_touch(void) {
     esp_lcd_new_panel_io_i2c((esp_lcd_i2c_bus_handle_t)TOUCH_HOST, &tp_io_config, &tp_io_handle);
 
     const esp_lcd_touch_config_t tp_cfg = {
-        .x_max = BOARD_LCD_H_RES,
-        .y_max = BOARD_LCD_V_RES,
+        //.x_max = BOARD_LCD_H_RES,
+        //.y_max = BOARD_LCD_V_RES,
         .rst_gpio_num = BOARD_PIN_NUM_TOUCH_RST,
         .int_gpio_num = BOARD_PIN_NUM_TOUCH_INT,
         .levels = {

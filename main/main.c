@@ -64,8 +64,8 @@ void app_main(void) {
     password_registry_load();
 
     lvgl_port_lock(-1);
-    //init_ui();
-    init_touch_test_ui();
+    init_ui();
+    //init_touch_test_ui();
     lvgl_port_unlock();
 
     init_bluetooth(&bt_api_callbacks);
