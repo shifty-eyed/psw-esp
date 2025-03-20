@@ -1,13 +1,14 @@
 #include "keyboard.h"
+#include "ui_internal.h"
 
-static const char * const device_name_kb_map_uc[] = 
+static const char * device_name_kb_map_uc[] = 
    {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\n",
     "A", "S", "D", "F", "G", "H", "J", "K", "L", "\n",
     "-", "Z", "X", "C", "V", "B", "N", "M", ".", "\n",
     "1#", "abc", " ", LV_SYMBOL_BACKSPACE, ""
 };
 
-static const char * const device_name_kb_map_lc[] = 
+static const char * device_name_kb_map_lc[] = 
    {"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
     "a", "s", "d", "f", "g", "h", "j", "k", "l", "\n",
     "-", "z", "x", "c", "v", "b", "n", "m", ".", "\n",
@@ -21,7 +22,7 @@ static const lv_buttonmatrix_ctrl_t device_name_kb_ctrl_uc_and_lc_map[] = {
     LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, LV_KEYBOARD_CTRL_BUTTON_FLAGS | 6, 6, LV_BUTTONMATRIX_CTRL_CHECKED | 5, 
 };
 
-static const char * const device_name_kb_map_spec[] = 
+static const char * device_name_kb_map_spec[] = 
    {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
     "+", "&", "/", "*", "=", "%", "!", "?", "#", "<", ">", "\n",
     "\\",  "@", "$", "(", ")", "{", "}", "[", "]", ";", "'", "\n",

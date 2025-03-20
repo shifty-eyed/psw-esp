@@ -48,7 +48,7 @@ void app_main(void) {
     esp_err_t ret;
     init_gpio_and_power_task();
     init_lcd_and_touch();
-    set_lcd_brightness(40);
+    //set_lcd_brightness(40);
 
 
     // Initialize NVS.

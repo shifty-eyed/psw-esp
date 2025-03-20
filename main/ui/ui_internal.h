@@ -1,7 +1,11 @@
 #ifndef UI_INTERNAL_H
 #define UI_INTERNAL_H
 
+#define LVGL8 
+
 #include "item_registry.h"
+#include "lvgl9to8.h"
+#include "style.h"
 
 void pair_device_dialog_init();
 bool pair_device_dialog_is_open();

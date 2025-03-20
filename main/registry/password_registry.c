@@ -10,7 +10,7 @@
 
 static const char *TAG = "PSW_REG";
 
-#define MAX_ENTRIES (128)
+#define MAX_ENTRIES (64)
 #define NVS_STORAGE_NAME "psw_storage"
 #define NVS_KEY_COUNT "psw_count"
 #define NVS_KEY_FORMAT "psw_%d"

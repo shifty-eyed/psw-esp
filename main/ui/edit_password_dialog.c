@@ -34,10 +34,6 @@ static lv_obj_t* generate_use_symbols_set1 = NULL;
 static lv_obj_t* generate_use_symbols_set2 = NULL;
 static lv_obj_t* generate_button = NULL;
 
-static const lv_color_t delete_button_bg_color = { .red = 180, .green = 40, .blue = 40 };
-static const lv_color_t title_text_color = { .red = 255, .green = 255, .blue = 255 };
-static const lv_color_t text_input_bg_color = { .red = 60, .green = 60, .blue = 30 };
-
 static void next_page_button_cb(lv_event_t *e);
 static void prev_page_button_cb(lv_event_t *e);
 static void close_generate_settings_cb(lv_event_t *e);
@@ -249,7 +245,7 @@ static void create_generate_settings_component() {
     label = lv_label_create(settings_layout);
     lv_label_set_text(label, "GENERATOR SETTINGS");
     lv_obj_set_style_text_color(label, title_text_color, 0);
-    lv_obj_set_style_margin_left(label, 10, 0);
+    //lv_obj_set_style_margin_left(label, 10, 0);
     
     lv_obj_t* length_generate_bar = mylv_create_container_flex(settings_layout, LV_FLEX_FLOW_ROW, SCREEN_W, 35);
     lv_obj_set_style_pad_hor(length_generate_bar, 2, 0);
@@ -290,7 +286,7 @@ static void create_generate_settings_component() {
 
     lv_obj_t* button_ok = lv_button_create(settings_layout);
     lv_obj_set_size(button_ok, 65, 30);
-    lv_obj_set_style_margin_left(button_ok, 120, 0);
+    //lv_obj_set_style_margin_left(button_ok, 120, 0);
     lv_obj_add_event_cb(button_ok, close_generate_settings_cb, LV_EVENT_CLICKED, NULL);
     label = lv_label_create(button_ok);
     lv_label_set_text(label, "OK");
@@ -367,8 +363,10 @@ void edit_password_dialog_init() {
     if (dialog != NULL) {
         return;
     }
+
     dialog = lv_obj_create(lv_screen_active());
     lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
+    lv_obj_center(dialog);
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
     lv_obj_set_style_bg_color(dialog, lv_color_black(), 0);

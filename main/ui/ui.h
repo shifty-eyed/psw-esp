@@ -6,12 +6,19 @@
 #define TAB_ID_DEVICE (0)
 #define TAB_ID_PASSWORD (1)
 
-#define SCREEN_W (240)
-#define SCREEN_H (280)
+#define SCREEN_W (360)
+#define SCREEN_H (400)
 
 
-#define TAB_BAR_H (30)
-#define TOOL_BAR_H (30)
+#define TAB_BAR_H (50)
+#define TOOL_BAR_H (50)
+#define LIST_ITEM_H (40)
+
+#define FLOATING_BUTTON_SIZE (50)
+#define FLOATING_BUTTON_GAP (60)
+#define FLOATING_BUTTON_OFFSET (-40)
+
+#define SPINNER_SIZE (50)
 
 #define BTN_DEVICE_DELETE (3)
 #define BTN_DEVICE_DISCONNECT (2)

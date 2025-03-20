@@ -48,6 +48,14 @@
         "cstdlib": "c",
         "functional": "c",
         "ui_internal.h": "c",
-        "esp_log.h": "c"
+        "esp_log.h": "c",
+        "touch_bsp.h": "c",
+        "esp_check.h": "c",
+        "esp_lcd_panel_ops.h": "c",
+        "esp_lcd_sh8601.h": "c",
+        "style.h": "c",
+        "lvgl.h": "c",
+        "lvgl9to8.h": "c",
+        "keyboard.h": "c"
     }
 }

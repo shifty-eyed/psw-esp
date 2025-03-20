@@ -25,22 +25,13 @@ static lv_timer_t *device_connect_timer = NULL;
 static lv_obj_t *toast = NULL;
 static lv_timer_t *timer = NULL;
 
-const lv_color_t row_bg_color1 = { .red = 10, .green = 10, .blue = 15 };
-const lv_color_t row_bg_color2 = { .red = 15, .green = 15, .blue = 20 };
-const lv_color_t row_bg_selected = { .red = 40, .green = 70, .blue = 200 };
-const lv_color_t row_text_color = { .red = 240, .green = 240, .blue = 240 };
-
 static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
 
 static void evaluate_buttons_state() {
-    //lv_obj_t * tab_bar = lv_tabview_get_tab_bar(tabview);
-    //lv_obj_t * password_tab_btn = lv_obj_get_child(tab_bar, 1);
-
     bool connected = bt_is_connected();
     bool device_selected = device_tab.selected_item >= 0;
     bool password_selected = password_tab.selected_item >= 0;
 
-    //lv_enable(password_tab_btn, connected);
     lv_show(device_tab.toolbar_button[BTN_DEVICE_DELETE], device_selected && !connected);
     lv_show(device_tab.toolbar_button[BTN_DEVICE_CONNECT], device_selected && !connected);
     lv_show(device_tab.toolbar_button[BTN_DEVICE_DISCONNECT], connected);
@@ -212,7 +203,7 @@ static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event
         lv_obj_set_style_bg_color(btn, (i % 2) ? row_bg_color1 : row_bg_color2, 0);
         lv_obj_set_style_bg_color(btn, row_bg_selected, LV_STATE_CHECKED);
         lv_obj_set_style_border_side(btn, LV_BORDER_SIDE_NONE, 0);
-        lv_obj_set_height(btn, 35);
+        lv_obj_set_height(btn, LIST_ITEM_H);
     }
 }
 
@@ -247,11 +238,9 @@ static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int pos
     lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(btn, symbol, 0);
 
-    static int gap = 60;
-    static int offset = 20;
-    lv_obj_set_size(btn, 50, 50);
+    lv_obj_set_size(btn, FLOATING_BUTTON_SIZE, FLOATING_BUTTON_SIZE);
     lv_obj_add_flag(btn, LV_OBJ_FLAG_FLOATING);
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, -offset - (position * gap), -10);
+    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, FLOATING_BUTTON_OFFSET - (position * FLOATING_BUTTON_GAP), -10);
     lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_text_font(btn, lv_theme_get_font_large(btn), 0);
     return btn;
@@ -290,7 +279,10 @@ static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api
 }
 
 void tab_switch_event_cb(lv_event_t * e) {
-    lv_obj_remove_state(lv_obj_get_child(password_tab.list, password_tab.selected_item), LV_STATE_CHECKED);
+    lv_obj_t* selected_item = lv_obj_get_child(password_tab.list, password_tab.selected_item);
+    if (selected_item) {
+        lv_obj_remove_state(selected_item, LV_STATE_CHECKED);
+    }
     password_tab.selected_item = -1;
     evaluate_buttons_state();
 }
@@ -320,18 +312,15 @@ void show_toast(const char *message, bool is_error) {
     lv_label_set_text(lv_obj_get_child(toast, 0), message);
 
     if (timer) lv_timer_delete(timer);
-    timer = lv_timer_create_basic();
-    lv_timer_set_period(timer, TOAST_DURATION);
+    timer = lv_timer_create(toast_timer_cb, TOAST_DURATION, toast);
     lv_timer_set_repeat_count(timer, 1);
-    lv_timer_set_user_data(timer, toast);
-    lv_timer_set_cb(timer, toast_timer_cb);
 }
 
 void show_spinner(bool show) {
     if (!spinner) {
-        spinner = lv_spinner_create(lv_screen_active());
+        spinner = lv_spinner_create(lv_screen_active(), 1000, 60);
         lv_obj_align(spinner, LV_ALIGN_CENTER, 0, 0);
-        lv_obj_set_size(spinner, 50, 50);
+        lv_obj_set_size(spinner, SPINNER_SIZE, SPINNER_SIZE);
     }
     if (show) {
         lv_obj_remove_flag(spinner, LV_OBJ_FLAG_HIDDEN);
@@ -343,22 +332,23 @@ void show_spinner(bool show) {
 
 void init_ui() {
     ESP_LOGI(TAG, "init_ui()");
+    init_theme();
 
-    lv_theme_t *theme = lv_theme_default_init(
-        lv_display_get_default(),
-        lv_palette_main(LV_PALETTE_BLUE),
-        lv_palette_main(LV_PALETTE_RED),
-        true,  // Dark mode
-        LV_FONT_DEFAULT);
-    lv_display_set_theme(lv_display_get_default(), theme);
-
+    #ifdef LVGL8
+    tabview = lv_tabview_create(lv_screen_active(), LV_DIR_TOP, TAB_BAR_H);
+    lv_obj_t * tab_buttons = lv_tabview_get_tab_btns(tabview);
+    
+    #else
     tabview = lv_tabview_create(lv_screen_active());
     lv_tabview_set_tab_bar_size(tabview, TAB_BAR_H);
-
     lv_obj_t * tab_buttons = lv_tabview_get_tab_bar(tabview);
+    #endif
+
     lv_obj_set_style_border_side(tab_buttons, LV_BORDER_SIDE_BOTTOM, LV_PART_ITEMS | LV_STATE_CHECKED);
 
     lv_obj_add_event_cb(tabview, tab_switch_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_set_size(tabview, SCREEN_W, SCREEN_H);
+    lv_obj_center(tabview);
 
     device_tab = init_tab_view("Devices", tabview, &device_registry_common, 
         device_list_item_cb, TAB_ID_DEVICE, LV_SYMBOL_BLUETOOTH);
@@ -366,6 +356,7 @@ void init_ui() {
         password_list_item_cb, TAB_ID_PASSWORD, LV_SYMBOL_KEYBOARD);
 
     evaluate_buttons_state();
+
 
     pair_device_dialog_init();
     edit_password_dialog_init();

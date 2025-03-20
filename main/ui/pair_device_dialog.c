@@ -21,9 +21,6 @@ static lv_obj_t* kb = NULL;
 
 static bool paired = false;
 
-static const lv_color_t delete_button_bg_color = { .red = 180, .green = 40, .blue = 40 };
-static const lv_color_t text_input_bg_color = { .red = 60, .green = 60, .blue = 30 };
-
 static void apply_styles() {
     lv_obj_set_style_bg_color(dialog, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
@@ -72,7 +69,6 @@ static void text_input_cb(lv_event_t *e) {
         return;
     }
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * ta = lv_event_get_target(e);
     size_t len = strlen(lv_textarea_get_text(input_name));
 
     if (code == LV_EVENT_VALUE_CHANGED) {
@@ -114,8 +110,10 @@ void pair_device_dialog_init() {
     if (dialog != NULL) {
         return;
     }
+
     dialog = lv_obj_create(lv_scr_act());
     lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
+    lv_obj_center(dialog);
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
     lv_show(dialog, false);
 
@@ -131,7 +129,7 @@ void pair_device_dialog_init() {
     lv_obj_set_size(cancel_button, 100, 30);
     lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, 0, -20);
 
-    spinner = lv_spinner_create(dialog);
+    spinner = lv_spinner_create(dialog, 1000, 60);
     lv_obj_align(spinner, LV_ALIGN_TOP_LEFT, 20, 15);
     lv_obj_set_size(spinner, 30, 30);
 
