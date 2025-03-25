@@ -27,6 +27,10 @@ static void apply_styles() {
 
     lv_obj_set_style_text_color(status_label, lv_color_white(), 0);
     lv_obj_set_style_bg_color(cancel_button, delete_button_bg_color, 0);
+
+    lv_obj_set_style_bg_color(save_button, disabled_button_bg_color, LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(save_button, disabled_button_text_color, LV_STATE_DISABLED);
+    
 }
 
 static void close_dialog() {
@@ -148,8 +152,8 @@ void pair_device_dialog_init() {
     lv_obj_set_style_bg_color(input_name, text_input_bg_color, 0);
 
     kb = lv_my_keyboard_create(dialog);
-    lv_obj_set_size(kb,  SCREEN_W, SCREEN_H / 2 + 30);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 10);
+    lv_obj_set_size(kb,  KEYBOARD_WIDTH, KEYBOARD_HEIGHT);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, KEYBOARD_OFFSET_V);
     
     lv_keyboard_set_textarea(kb, input_name);
 

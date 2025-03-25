@@ -34,15 +34,15 @@ void my_nvs_set_i16(nvs_handle_t my_handle, const char *key, int16_t value) {
     }
 }
 
-int16_t my_nvs_get_i16(nvs_handle_t my_handle, const char *key) {
+int16_t my_nvs_get_i16(nvs_handle_t my_handle, const char *key, const int16_t default_value) {
     int16_t value;
     esp_err_t err = nvs_get_i16(my_handle, key, &value);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
         ESP_LOGI(TAG, "No %s stored yet", key);
-        value = 0;
+        value = default_value;
     } else if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error reading %s from NVS: %s", key, esp_err_to_name(err));
-        value = 0;
+        value = default_value;
     }
     return value;
 }
@@ -60,10 +60,10 @@ void my_nvs_save_password_dialog_settings(int length, bool use_numbers, bool use
 void my_nvs_load_password_dialog_settings(int *length, bool *use_numbers, bool *use_symbols_set1, bool *use_symbols_set2) {
     nvs_handle_t my_handle;
     my_nvs_open(&my_handle, "password_dialog");
-    *length = my_nvs_get_i16(my_handle, "length");
-    *use_numbers = my_nvs_get_i16(my_handle, "use_numbers");
-    *use_symbols_set1 = my_nvs_get_i16(my_handle, "use_symbols1");
-    *use_symbols_set2 = my_nvs_get_i16(my_handle, "use_symbols2");
+    *length = my_nvs_get_i16(my_handle, "length", 20);
+    *use_numbers = my_nvs_get_i16(my_handle, "use_numbers", 1);
+    *use_symbols_set1 = my_nvs_get_i16(my_handle, "use_symbols1", 1);
+    *use_symbols_set2 = my_nvs_get_i16(my_handle, "use_symbols2", 0);
     nvs_close(my_handle);
 }
 

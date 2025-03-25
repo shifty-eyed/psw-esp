@@ -8,7 +8,6 @@ TBD
 
 
 # TODO
-    when nvs is empty, init config from defaults
 
 ## Pair device dialog
     fix pairing known device error hadnling
@@ -24,5 +23,4 @@ TBD
 ## Misc
     settings:
     add brightness control
-    experiment with loading and deleting lvgl objects instead of visibilty
 

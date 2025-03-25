@@ -176,7 +176,6 @@ void bt_start_advertising() {
 }
 
 bool bt_direct_advertizing(esp_bd_addr_t addr, esp_ble_addr_type_t addr_type) {
-    esp_err_t err;
     if (device_connected) {
         ESP_LOGW(TAG, "bt_direct_advertizing - Device already connected");
         return false;

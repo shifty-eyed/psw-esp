@@ -1,7 +1,11 @@
 #include "style.h"
 
 
-lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color, delete_button_bg_color, title_text_color, text_input_bg_color;
+lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color, 
+    delete_button_bg_color, 
+    disabled_button_bg_color,
+    disabled_button_text_color,
+    title_text_color, text_input_bg_color;
 
 
 void init_theme() {
@@ -13,11 +17,15 @@ void init_theme() {
     title_text_color = lv_color_make(255, 255, 255);
     text_input_bg_color = lv_color_make(60, 60, 30);
 
+    disabled_button_bg_color = lv_color_make(40, 40, 80);
+    disabled_button_text_color = lv_color_black();
+
     lv_theme_t *theme = lv_theme_default_init(
         lv_disp_get_default(),
         lv_palette_main(LV_PALETTE_BLUE),
-        lv_palette_main(LV_PALETTE_RED),
+        lv_palette_main(LV_PALETTE_DEEP_ORANGE),
         true,  // Dark mode
         LV_FONT_DEFAULT);
+        
     lv_disp_set_theme(lv_disp_get_default(), theme);
 }

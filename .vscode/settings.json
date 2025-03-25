@@ -56,6 +56,7 @@
         "style.h": "c",
         "lvgl.h": "c",
         "lvgl9to8.h": "c",
-        "keyboard.h": "c"
+        "keyboard.h": "c",
+        "esp_lcd_panel_io.h": "c"
     }
 }

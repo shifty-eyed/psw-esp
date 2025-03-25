@@ -94,19 +94,31 @@ void example_lvgl_rounder_cb(struct _lv_disp_drv_t *disp_drv, lv_area_t *area) {
 
 static void example_lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     static uint16_t prev_x, prev_y;
+    static int64_t last_press_time = 0;
+    static bool already_released = false;
     uint16_t tp_x;
     uint16_t tp_y;
     uint8_t win = getTouch(&tp_x,&tp_y);
-    if (win && (tp_x != prev_x || tp_y != prev_y)) {
-        data->point.x = prev_x = tp_x;
-        data->point.y = prev_y = tp_y;
-        data->state = LV_INDEV_STATE_PRESSED;
-        ESP_LOGI("TOUCH", "Press at (%d, %d)", (int)tp_x, (int)tp_y);
+    bool fake_press = tp_x == prev_x && tp_y == prev_y && (esp_timer_get_time() - last_press_time) > 5000000; // 5 seconds
+
+    if (win) {
+        if (fake_press) {
+            ESP_LOGW("TOUCH", "Fake press detected");
+        } else {
+            data->point.x = prev_x = tp_x;
+            data->point.y = prev_y = tp_y;
+            data->state = LV_INDEV_STATE_PRESSED;
+            last_press_time = esp_timer_get_time();
+            already_released = false;
+            ESP_LOGI("TOUCH", "Press at (%d, %d)", (int)tp_x, (int)tp_y);
+        }
     }
-    else {
+    else if (!already_released) {
+        already_released = true;
         data->point.x = prev_x;
         data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
+        ESP_LOGI("TOUCH", "Release (%d, %d)", (int)prev_x, (int)prev_y);
     }
 }
 

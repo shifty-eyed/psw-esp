@@ -27,6 +27,15 @@ static lv_timer_t *timer = NULL;
 
 static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
 
+lv_coord_t xcoord(lv_coord_t value) {
+    return (lv_coord_t)(value * COORD_RATIO_X);
+}
+
+lv_coord_t ycoord(lv_coord_t value) {
+    return (lv_coord_t)(value * COORD_RATIO_Y);
+}
+
+
 static void evaluate_buttons_state() {
     bool connected = bt_is_connected();
     bool device_selected = device_tab.selected_item >= 0;

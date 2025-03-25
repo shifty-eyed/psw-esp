@@ -73,7 +73,7 @@ void password_registry_load() {
 
 
     my_nvs_open(&my_handle, NVS_STORAGE_NAME);
-    count = my_nvs_get_i16(my_handle, NVS_KEY_COUNT);
+    count = my_nvs_get_i16(my_handle, NVS_KEY_COUNT, 0);
 
     for (int i = 0; i < count; i++) {
         do {

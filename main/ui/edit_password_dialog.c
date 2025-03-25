@@ -196,11 +196,10 @@ static void prev_page_button_cb(lv_event_t *e) {
 
 static void create_top_bar_buttons() {
     lv_obj_t* top_bar = lv_obj_create(dialog);
-    lv_obj_set_size(top_bar, SCREEN_W, 30);
-    lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, -18);
+    lv_obj_set_size(top_bar, xcoord(DIALOG_TOP_BAR_WIDTH), ycoord(50));
+    lv_obj_align(top_bar, LV_ALIGN_TOP_MID, 0, ycoord(-30));
     lv_obj_set_style_border_side(top_bar, LV_BORDER_SIDE_NONE, 0);
 
-    //lv_obj_set_layout(top_bar, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(top_bar, LV_FLEX_FLOW_ROW);
     lv_obj_set_style_pad_row(top_bar, 0, 0);
     lv_obj_set_style_pad_column(top_bar, 0, 0);
@@ -210,18 +209,20 @@ static void create_top_bar_buttons() {
     save_button = lv_button_create(top_bar);
     lv_obj_add_event_cb(save_button, save_password_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(save_button, LV_SYMBOL_SAVE, 0);
-    lv_obj_set_size(save_button, SCREEN_W/3 + 5, 30);
+    lv_obj_set_size(save_button, xcoord(300/3) + xcoord(5), ycoord(50));
+    lv_obj_set_style_bg_color(save_button, disabled_button_bg_color, LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(save_button, disabled_button_text_color, LV_STATE_DISABLED);
 
     delete_button = lv_button_create(top_bar);
     lv_obj_add_event_cb(delete_button, delete_entry_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(delete_button, LV_SYMBOL_TRASH, 0);
-    lv_obj_set_size(delete_button, SCREEN_W/3 - 5, 30);
+    lv_obj_set_size(delete_button, xcoord(300/3) - xcoord(15), ycoord(50));
     lv_obj_set_style_bg_color(delete_button, delete_button_bg_color, 0);
 
     cancel_button = lv_button_create(top_bar);
     lv_obj_add_event_cb(cancel_button, cancel_dialog_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
-    lv_obj_set_size(cancel_button, SCREEN_W/3 + 5, 30);
+    lv_obj_set_size(cancel_button, xcoord(300/3) + xcoord(20), ycoord(50));
 }
 
 static void create_generate_settings_component() {
@@ -232,23 +233,27 @@ static void create_generate_settings_component() {
     my_nvs_load_password_dialog_settings(&psw_length, &use_numbers, &use_symbols_set1, &use_symbols_set2);
     itoa(psw_length, length_str, 10);
 
-    container_generate_settings = mylv_create_container(lv_screen_active(), SCREEN_W, SCREEN_H);
-    lv_obj_set_style_bg_opa(container_generate_settings, LV_OPA_70, 0);
+    container_generate_settings = mylv_create_container(lv_screen_active(), LCD_H_RES, LCD_V_RES);
+    lv_obj_set_style_bg_opa(container_generate_settings, LV_OPA_80, 0);
 
-    lv_obj_t* settings_layout = mylv_create_container_flex(container_generate_settings, LV_FLEX_FLOW_COLUMN, SCREEN_W-25, 200);
-    lv_obj_align(settings_layout, LV_ALIGN_TOP_MID, 0, 35);
+    lv_obj_t* settings_layout = mylv_create_container_flex(container_generate_settings, LV_FLEX_FLOW_COLUMN, xcoord(DIALOG_WIDTH-40), ycoord(250));
+    //lv_obj_align(settings_layout, LV_ALIGN_TOP_MID, 0, ycoord(60));
+    lv_obj_center(settings_layout);
     lv_obj_set_style_border_side(settings_layout, LV_BORDER_SIDE_FULL, 0);
-    lv_obj_set_style_pad_all(settings_layout, 10, 0);
+    lv_obj_set_style_pad_hor(settings_layout, xcoord(40), 0);
+    lv_obj_set_style_pad_ver(settings_layout, ycoord(20), 0);
     lv_obj_set_style_bg_opa(settings_layout, LV_OPA_100, 0);
     lv_obj_set_style_bg_color(settings_layout, lv_color_black(), 0);
 
     label = lv_label_create(settings_layout);
     lv_label_set_text(label, "GENERATOR SETTINGS");
     lv_obj_set_style_text_color(label, title_text_color, 0);
+    lv_obj_set_style_bg_color(label, disabled_button_bg_color, 0);
+    lv_obj_set_style_bg_opa(label, LV_OPA_100, 0);
     //lv_obj_set_style_margin_left(label, 10, 0);
     
-    lv_obj_t* length_generate_bar = mylv_create_container_flex(settings_layout, LV_FLEX_FLOW_ROW, SCREEN_W, 35);
-    lv_obj_set_style_pad_hor(length_generate_bar, 2, 0);
+    lv_obj_t* length_generate_bar = mylv_create_container_flex(settings_layout, LV_FLEX_FLOW_ROW, xcoord(DIALOG_WIDTH-40), ycoord(35));
+    lv_obj_set_style_pad_hor(length_generate_bar, xcoord(5), 0);
     lv_obj_set_flex_align(length_generate_bar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     label = lv_label_create(length_generate_bar);
@@ -256,21 +261,21 @@ static void create_generate_settings_component() {
 
     lv_obj_t* len_decrease_button = lv_button_create(length_generate_bar);
     lv_obj_set_style_bg_image_src(len_decrease_button, LV_SYMBOL_MINUS, 0);
-    lv_obj_set_size(len_decrease_button, 30, 30);
-    lv_obj_add_event_cb(len_decrease_button, gen_password_len_decrease_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_size(len_decrease_button, xcoord(40), ycoord(40));
+    lv_obj_add_event_cb(len_decrease_button, gen_password_len_decrease_cb, LV_EVENT_PRESSING, NULL);
 
     len_number_label = lv_textarea_create(length_generate_bar);
     lv_textarea_set_text(len_number_label, length_str);
     lv_textarea_set_one_line(len_number_label, true);
     lv_obj_remove_flag(len_number_label, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_remove_flag(len_number_label, LV_OBJ_FLAG_CLICK_FOCUSABLE);
-    lv_obj_set_size(len_number_label, 40, 30);
-    lv_obj_set_style_pad_ver(len_number_label, 2, 0);
+    lv_obj_set_size(len_number_label, xcoord(50), ycoord(40));
+    lv_obj_set_style_pad_all(len_number_label, ycoord(10), 0);
 
     lv_obj_t* len_increase_button = lv_button_create(length_generate_bar);
     lv_obj_set_style_bg_image_src(len_increase_button, LV_SYMBOL_PLUS, 0);
-    lv_obj_set_size(len_increase_button, 30, 30);
-    lv_obj_add_event_cb(len_increase_button, gen_password_len_increase_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_size(len_increase_button,  xcoord(40), ycoord(40));
+    lv_obj_add_event_cb(len_increase_button, gen_password_len_increase_cb, LV_EVENT_PRESSING, NULL);
 
     generate_use_numbers = lv_checkbox_create(settings_layout);
     lv_checkbox_set_text(generate_use_numbers, "Use 0-9");
@@ -285,8 +290,8 @@ static void create_generate_settings_component() {
     lv_obj_add_state(generate_use_symbols_set2, use_symbols_set2 ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
 
     lv_obj_t* button_ok = lv_button_create(settings_layout);
-    lv_obj_set_size(button_ok, 65, 30);
-    //lv_obj_set_style_margin_left(button_ok, 120, 0);
+    lv_obj_set_size(button_ok, xcoord(70), ycoord(40));
+    lv_obj_set_style_align(button_ok, LV_ALIGN_BOTTOM_RIGHT, 0);
     lv_obj_add_event_cb(button_ok, close_generate_settings_cb, LV_EVENT_CLICKED, NULL);
     label = lv_label_create(button_ok);
     lv_label_set_text(label, "OK");
@@ -296,22 +301,22 @@ static void create_generate_settings_component() {
 
 static void create_input_name_component() {
     lv_obj_t* label;
-    container_input_name = mylv_create_container(dialog, SCREEN_W, 72);
-    lv_obj_align(container_input_name, LV_ALIGN_TOP_MID, 0, 20);
+    container_input_name = mylv_create_container(dialog, DIALOG_WIDTH, ycoord(90));
+    lv_obj_align(container_input_name, LV_ALIGN_TOP_MID, 0, ycoord(35));
     
     label = lv_label_create(container_input_name);
     lv_label_set_text(label, "Entry Name:");
-    lv_obj_align(label, LV_ALIGN_TOP_LEFT, 15, 22);
+    lv_obj_align(label, LV_ALIGN_TOP_LEFT, xcoord(15), ycoord(22));
 
     lv_obj_t* button_next = lv_button_create(container_input_name);
-    lv_obj_set_size(button_next, 100, 30);
-    lv_obj_align(button_next, LV_ALIGN_TOP_RIGHT, -5, 5);
+    lv_obj_set_size(button_next, xcoord(120), ycoord(40));
+    lv_obj_align(button_next, LV_ALIGN_TOP_RIGHT, xcoord(-15), 0);
     lv_obj_add_event_cb(button_next, next_page_button_cb, LV_EVENT_CLICKED, NULL);
     label = lv_label_create(button_next);
     lv_label_set_text(label, "Password >");
 
     input_name = lv_textarea_create(container_input_name);
-    lv_obj_set_size(input_name, SCREEN_W-15, 40);
+    lv_obj_set_size(input_name, DIALOG_WIDTH-xcoord(15), ycoord(45));
     lv_obj_align(input_name, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_textarea_set_one_line(input_name, true);
     lv_textarea_set_cursor_click_pos(input_name, true);
@@ -325,16 +330,16 @@ static void create_input_name_component() {
 static void create_input_password_component() {
     lv_obj_t* label;
 
-    container_input_password = mylv_create_container(dialog, SCREEN_W, 72);
-    lv_obj_align(container_input_password, LV_ALIGN_TOP_MID, 0, 20);
+    container_input_password = mylv_create_container(dialog, DIALOG_WIDTH, ycoord(90));
+    lv_obj_align(container_input_password, LV_ALIGN_TOP_MID, 0, ycoord(35));
 
     label = lv_label_create(container_input_password);
     lv_label_set_text(label, "Password:");
-    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, xcoord(-20), ycoord(22));
     
     lv_obj_t* button_prev = lv_button_create(container_input_password);
-    lv_obj_set_size(button_prev, 65, 30);
-    lv_obj_align(button_prev, LV_ALIGN_TOP_LEFT, 5, 5);
+    lv_obj_set_size(button_prev, xcoord(90), ycoord(40));
+    lv_obj_align(button_prev, LV_ALIGN_TOP_LEFT, xcoord(10), 0);
     lv_obj_set_style_pad_all(button_prev, 2, 0);
     lv_obj_add_event_cb(button_prev, prev_page_button_cb, LV_EVENT_CLICKED, NULL);
     label = lv_label_create(button_prev);
@@ -342,15 +347,17 @@ static void create_input_password_component() {
     lv_label_set_text(label, "< Name");
 
     generate_button = lv_button_create(container_input_password);
-    lv_obj_set_size(generate_button, 35, 35);
-    lv_obj_align(generate_button, LV_ALIGN_TOP_RIGHT, -5, 0);
+    lv_obj_set_size(generate_button, xcoord(120), ycoord(40));
+    lv_obj_align(generate_button, LV_ALIGN_TOP_RIGHT, xcoord(-10), 0);
     lv_obj_set_style_pad_all(generate_button, 2, 0);
     lv_obj_add_event_cb(generate_button, generate_button_click_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(generate_button, generate_button_long_press_cb, LV_EVENT_LONG_PRESSED, NULL);
-    lv_obj_set_style_bg_image_src(generate_button, LV_SYMBOL_REFRESH, 0);
+    label = lv_label_create(generate_button);
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    lv_label_set_text(label, LV_SYMBOL_REFRESH " Generate");
 
     input_password = lv_textarea_create(container_input_password);
-    lv_obj_set_size(input_password, SCREEN_W - 15, 40);
+    lv_obj_set_size(input_password, DIALOG_WIDTH-xcoord(15), ycoord(45));
     lv_obj_align(input_password, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_textarea_set_placeholder_text(input_password, "Generate " LV_SYMBOL_REFRESH " or type");
     lv_textarea_set_one_line(input_password, true);
@@ -365,7 +372,7 @@ void edit_password_dialog_init() {
     }
 
     dialog = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
+    lv_obj_set_size(dialog, DIALOG_WIDTH, PASSWORD_DIALOG_HEIGHT);
     lv_obj_center(dialog);
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
@@ -382,8 +389,8 @@ void edit_password_dialog_init() {
     lv_show(container_input_password, false);
 
     kb = lv_my_keyboard_create(dialog);
-    lv_obj_set_size(kb,  SCREEN_W, SCREEN_H / 2 + 30);
-    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 15);
+    lv_obj_set_size(kb,  KEYBOARD_WIDTH, KEYBOARD_HEIGHT);
+    lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, KEYBOARD_OFFSET_V);
 
     group_input_name = lv_group_create();
     lv_group_add_obj(group_input_name, input_name);
