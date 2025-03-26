@@ -21,18 +21,6 @@ static lv_obj_t* kb = NULL;
 
 static bool paired = false;
 
-static void apply_styles() {
-    lv_obj_set_style_bg_color(dialog, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
-
-    lv_obj_set_style_text_color(status_label, lv_color_white(), 0);
-    lv_obj_set_style_bg_color(cancel_button, delete_button_bg_color, 0);
-
-    lv_obj_set_style_bg_color(save_button, disabled_button_bg_color, LV_STATE_DISABLED);
-    lv_obj_set_style_text_color(save_button, disabled_button_text_color, LV_STATE_DISABLED);
-    
-}
-
 static void close_dialog() {
     lv_show(dialog, false);
     lv_group_focus_freeze(group_input_name, false);
@@ -115,37 +103,42 @@ void pair_device_dialog_init() {
         return;
     }
 
-    dialog = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(dialog, SCREEN_W, SCREEN_H);
+    dialog = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(dialog, DIALOG_WIDTH, DIALOG_HEIGHT);
     lv_obj_center(dialog);
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
+    lv_obj_set_style_bg_color(dialog, lv_color_black(), 0);
     lv_show(dialog, false);
 
     save_button = lv_button_create(dialog);
     lv_obj_add_event_cb(save_button, save_password_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(save_button, LV_SYMBOL_SAVE, 0);
-    lv_obj_set_size(save_button, 100, 30);
-    lv_obj_align(save_button, LV_ALIGN_TOP_LEFT, 0, -18);
+    lv_obj_set_size(save_button, xcoord(130), ycoord(50));
+    lv_obj_align(save_button, LV_ALIGN_TOP_LEFT, xcoord(30), ycoord(-20));
+    lv_obj_set_style_bg_color(save_button, disabled_button_bg_color, LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(save_button, disabled_button_text_color, LV_STATE_DISABLED);
 
     cancel_button = lv_button_create(dialog);
     lv_obj_add_event_cb(cancel_button, cancel_dialog_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
-    lv_obj_set_size(cancel_button, 100, 30);
-    lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, 0, -20);
+    lv_obj_set_size(cancel_button, xcoord(130), ycoord(50));
+    lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, xcoord(-30), ycoord(-20));
+    lv_obj_set_style_bg_color(cancel_button, cancel_button_bg_color, 0);
 
     spinner = lv_spinner_create(dialog, 1000, 60);
-    lv_obj_align(spinner, LV_ALIGN_TOP_LEFT, 20, 15);
-    lv_obj_set_size(spinner, 30, 30);
+    lv_obj_align(spinner, LV_ALIGN_TOP_MID, xcoord(-50), ycoord(35));
+    lv_obj_set_size(spinner, xcoord(40), ycoord(40));
 
     status_label = lv_label_create(dialog);
     lv_label_set_text(status_label, "Pairing...");
-    lv_obj_align(status_label, LV_ALIGN_TOP_MID, 0, 25);
+    lv_obj_align(status_label, LV_ALIGN_TOP_MID, xcoord(20), ycoord(55));
 
     input_name = lv_textarea_create(dialog);
+    lv_obj_set_size(input_name, DIALOG_WIDTH-xcoord(40), ycoord(45));
+    lv_obj_align(input_name, LV_ALIGN_TOP_MID, 0, ycoord(90));
     lv_textarea_set_placeholder_text(input_name, "New Device Name");
     lv_textarea_set_one_line(input_name, true);
-    lv_obj_set_size(input_name, SCREEN_W - 20, 30);
-    lv_obj_align(input_name, LV_ALIGN_TOP_MID, 0, 55);
     lv_textarea_set_cursor_click_pos(input_name, true);
     lv_obj_set_style_pad_ver(input_name, 4, 0);
     lv_obj_add_event_cb(input_name, text_input_cb, LV_EVENT_VALUE_CHANGED, NULL);
@@ -156,8 +149,6 @@ void pair_device_dialog_init() {
     lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, KEYBOARD_OFFSET_V);
     
     lv_keyboard_set_textarea(kb, input_name);
-
-    apply_styles();
 
     group_input_name = lv_group_create();
     lv_group_add_obj(group_input_name, input_name);

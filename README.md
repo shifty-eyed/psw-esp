@@ -8,6 +8,8 @@ TBD
 
 
 # TODO
+keyboard make better fit to round display
+bigger font
 
 ## Pair device dialog
     fix pairing known device error hadnling
@@ -16,11 +18,12 @@ TBD
     device tab: 2 btn visible: conn/dis, (...) -> create, delete, set device name
     password tab: 2 btn visible: apply, (...) -> create, delete, edit
 
-
 ## Refactoring
     merge the logic for registry
 
 ## Misc
     settings:
     add brightness control
+    device name
+
 

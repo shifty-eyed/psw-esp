@@ -2,7 +2,8 @@
 
 
 lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color, 
-    delete_button_bg_color, 
+    delete_button_bg_color,
+    cancel_button_bg_color,
     disabled_button_bg_color,
     disabled_button_text_color,
     title_text_color, text_input_bg_color;
@@ -14,6 +15,7 @@ void init_theme() {
     row_bg_selected = lv_color_make(40, 70, 200);
     row_text_color = lv_color_make(240, 240, 240);
     delete_button_bg_color = lv_color_make(180, 40, 40);
+    cancel_button_bg_color = lv_color_make(40, 40, 80);
     title_text_color = lv_color_make(255, 255, 255);
     text_input_bg_color = lv_color_make(60, 60, 30);
 

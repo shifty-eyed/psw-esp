@@ -223,6 +223,7 @@ static void create_top_bar_buttons() {
     lv_obj_add_event_cb(cancel_button, cancel_dialog_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
     lv_obj_set_size(cancel_button, xcoord(300/3) + xcoord(20), ycoord(50));
+    lv_obj_set_style_bg_color(cancel_button, cancel_button_bg_color, 0);
 }
 
 static void create_generate_settings_component() {
@@ -372,12 +373,11 @@ void edit_password_dialog_init() {
     }
 
     dialog = lv_obj_create(lv_screen_active());
-    lv_obj_set_size(dialog, DIALOG_WIDTH, PASSWORD_DIALOG_HEIGHT);
+    lv_obj_set_size(dialog, DIALOG_WIDTH, DIALOG_HEIGHT);
     lv_obj_center(dialog);
     lv_obj_remove_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_side(dialog, LV_BORDER_SIDE_NONE, 0);
     lv_obj_set_style_bg_color(dialog, lv_color_black(), 0);
-
     lv_show(dialog, false);
 
     create_top_bar_buttons();
