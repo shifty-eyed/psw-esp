@@ -21,6 +21,7 @@
 static const char *TAG = "LCD_TOUCH";
 
 static SemaphoreHandle_t lvgl_mux = NULL;
+static esp_lcd_panel_handle_t panel_handle = NULL;
 
 #define LCD_HOST    SPI2_HOST
 #define LCD_BIT_PER_PIXEL       (16)
@@ -158,31 +159,6 @@ static void example_lvgl_port_task(void *arg) {
     }
 }
 
-static esp_err_t bsp_display_brightness_init(void) {
-    // Setup LEDC peripheral for PWM backlight control
-    const ledc_channel_config_t LCD_backlight_channel = {
-        .gpio_num = EXAMPLE_PIN_NUM_BK_LIGHT,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LCD_LEDC_CH,
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = 1,
-        .duty = 0,
-        .hpoint = 0
-    };
-    const ledc_timer_config_t LCD_backlight_timer = {
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .duty_resolution = LEDC_TIMER_10_BIT,
-        .timer_num = 1,
-        .freq_hz = 5000,
-        .clk_cfg = LEDC_AUTO_CLK
-    };
-
-    ESP_RETURN_ON_ERROR(ledc_timer_config(&LCD_backlight_timer), TAG, "LEDC timer config failed");
-    ESP_RETURN_ON_ERROR(ledc_channel_config(&LCD_backlight_channel), TAG, "LEDC channel config failed");
-
-    return ESP_OK;
-}
-
 void init_lcd_and_touch(void) {
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
@@ -211,7 +187,6 @@ void init_lcd_and_touch(void) {
     // Attach the LCD to the SPI bus
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &io_config, &io_handle));
 
-    esp_lcd_panel_handle_t panel_handle = NULL;
     const esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = EXAMPLE_PIN_NUM_LCD_RST,
         .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
@@ -272,18 +247,6 @@ void init_lcd_and_touch(void) {
 }
 
 
-esp_err_t set_lcd_brightness(int brightness_percent) {
-    if (brightness_percent > 100) {
-        brightness_percent = 100;
-    }
-    if (brightness_percent < 0) {
-        brightness_percent = 0;
-    }
-
-    ESP_LOGI(TAG, "Setting LCD backlight: %d%%", brightness_percent);
-    uint32_t duty_cycle = (1023 * brightness_percent) / 100; // LEDC resolution set to 10bits, thus: 100% = 1023
-    ESP_RETURN_ON_ERROR(ledc_set_duty(LEDC_LOW_SPEED_MODE, LCD_LEDC_CH, duty_cycle), TAG, "LEDC set duty failed");
-    ESP_RETURN_ON_ERROR(ledc_update_duty(LEDC_LOW_SPEED_MODE, LCD_LEDC_CH), TAG, "LEDC update duty failed");
-
-    return ESP_OK;
+void lcd_panel_on(bool value) {
+    esp_lcd_panel_disp_on_off(panel_handle, value);
 }

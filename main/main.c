@@ -1,5 +1,6 @@
 #include "nvs_flash.h"
 
+#include "esp_sleep.h"
 #include "system/lcd_touch.h"
 #include "system/power_control.h"
 #include "registry/item_registry.h"
@@ -46,6 +47,9 @@ static bt_api_callbacks_t bt_api_callbacks = {
 
 void app_main(void) {
     esp_err_t ret;
+
+    ESP_LOGI(TAG, "esp_sleep_is_valid_wakeup_gpio: %d", esp_sleep_is_valid_wakeup_gpio(PWR_BUTTON_GPIO));
+    ESP_LOGI(TAG, "Woke up from: %d", esp_sleep_get_wakeup_cause());
     init_gpio_and_power_task();
     init_lcd_and_touch();
     //set_lcd_brightness(40);

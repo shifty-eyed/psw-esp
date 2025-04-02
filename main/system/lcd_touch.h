@@ -4,7 +4,7 @@
 #include "esp_lcd_sh8601.h"
 
 void init_lcd_and_touch(void);
-esp_err_t set_lcd_brightness(int brightness_percent);
+void lcd_panel_on(bool value);
 
 bool lvgl_port_lock(int timeout_ms);
 void lvgl_port_unlock(void);

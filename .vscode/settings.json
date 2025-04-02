@@ -57,6 +57,9 @@
         "lvgl.h": "c",
         "lvgl9to8.h": "c",
         "keyboard.h": "c",
-        "esp_lcd_panel_io.h": "c"
+        "esp_lcd_panel_io.h": "c",
+        "esp_sleep.h": "c",
+        "power_control.h": "c",
+        "gpio.h": "c"
     }
 }

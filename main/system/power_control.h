@@ -3,8 +3,7 @@
 
 #include "driver/gpio.h"
 
-#define SYS_EN_GPIO GPIO_NUM_35
-#define PWR_BUTTON_GPIO GPIO_NUM_36
+#define PWR_BUTTON_GPIO GPIO_NUM_0
 
 void init_gpio_and_power_task();
 
