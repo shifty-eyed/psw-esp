@@ -60,6 +60,8 @@
         "esp_lcd_panel_io.h": "c",
         "esp_sleep.h": "c",
         "power_control.h": "c",
-        "gpio.h": "c"
+        "gpio.h": "c",
+        "adc.h": "c",
+        "adc_oneshot.h": "c"
     }
 }
