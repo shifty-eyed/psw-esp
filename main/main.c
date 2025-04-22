@@ -45,13 +45,18 @@ static bt_api_callbacks_t bt_api_callbacks = {
     .on_device_connected = on_device_connected
 };
 
+static touch_callbacks_t touch_callbacks = {
+    .on_press = ui_on_touch_pressed,
+    .on_release = NULL
+};
+
 void app_main(void) {
     esp_err_t ret;
 
     ESP_LOGI(TAG, "esp_sleep_is_valid_wakeup_gpio: %d", esp_sleep_is_valid_wakeup_gpio(PWR_BUTTON_GPIO));
     ESP_LOGI(TAG, "Woke up from: %d", esp_sleep_get_wakeup_cause());
     init_gpio_and_power_task();
-    init_lcd_and_touch();
+    init_lcd_and_touch(&touch_callbacks);
     //set_lcd_brightness(40);
 
 

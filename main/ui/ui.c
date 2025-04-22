@@ -12,6 +12,7 @@ static const char *TAG = "UI";
 typedef struct {
     lv_obj_t *tab,
             *list,
+            *menu,
             *toolbar_button[4];
     int selected_item;
 } tab_components_t;
@@ -27,8 +28,16 @@ static lv_obj_t *toast = NULL;
 static lv_timer_t *timer = NULL;
 static lv_timer_t *battery_state_timer = NULL;
 
-
 static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
+
+void ui_on_touch_pressed(int x, int y) {
+    if (device_tab.menu && popup_menu_visible(device_tab.menu)) {
+        delayed_menu_hide(device_tab.menu);
+    }
+    if (password_tab.menu && popup_menu_visible(password_tab.menu)) {
+        delayed_menu_hide(password_tab.menu);
+    }
+}
 
 lv_coord_t xcoord(lv_coord_t value) {
     return (lv_coord_t)(value * COORD_RATIO_X);
@@ -86,7 +95,6 @@ void lv_show(lv_obj_t *obj, bool visible) {
         lv_obj_remove_flag(obj, LV_OBJ_FLAG_HIDDEN);
         lv_obj_remove_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
-
     } else {
         lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
@@ -245,19 +253,6 @@ void ui_on_password_dialog_closed(int index) {
     select_list_item(&password_tab, index);
 }
 
-static lv_obj_t * create_floating_button(lv_obj_t *parent, char *symbol, int position, lv_event_cb_t cb) {
-    lv_obj_t * btn = lv_button_create(parent);
-    lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_set_style_bg_image_src(btn, symbol, 0);
-
-    lv_obj_set_size(btn, FLOATING_BUTTON_SIZE, FLOATING_BUTTON_SIZE);
-    lv_obj_add_flag(btn, LV_OBJ_FLAG_FLOATING);
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, FLOATING_BUTTON_OFFSET - (position * FLOATING_BUTTON_GAP), -10);
-    lv_obj_set_style_radius(btn, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_text_font(btn, lv_theme_get_font_large(btn), 0);
-    return btn;
-}
-
 static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api_t *registry, 
         lv_event_cb_t cb, int tab_id, char *symbol) {
     tab_components_t result;
@@ -266,6 +261,7 @@ static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api
     lv_obj_remove_flag(result.tab, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_margin_all(result.tab, 0, 0);
     lv_obj_set_style_pad_all(result.tab, 0, 0);
+    lv_obj_set_style_border_side(result.tab, LV_BORDER_SIDE_FULL, 0);
 
     result.list = lv_list_create(result.tab);
     lv_obj_align(result.list, LV_ALIGN_TOP_MID, 0, 0);
@@ -277,14 +273,18 @@ static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api
 
     updale_list_items(result.list, registry, cb, symbol);
 
-    result.toolbar_button[0] = create_floating_button(result.tab, LV_SYMBOL_PLUS, 0, tab_id == TAB_ID_DEVICE ? device_add_cb : password_add_cb);
     if (tab_id == TAB_ID_DEVICE) {
-        result.toolbar_button[BTN_DEVICE_CONNECT] = create_floating_button(result.tab, LV_SYMBOL_POWER, 1, device_connect_cb);
-        result.toolbar_button[BTN_DEVICE_DISCONNECT] = create_floating_button(result.tab, LV_SYMBOL_EJECT, 1, device_disconnect_cb);
-        result.toolbar_button[BTN_DEVICE_DELETE] = create_floating_button(result.tab, LV_SYMBOL_TRASH, 2, device_delete_cb);
+        result.menu = popup_menu_create(result.tab, 4);
+        result.toolbar_button[BTN_DEVICE_CONNECT] = popup_menu_add_button(result.menu, "Connect", LV_SYMBOL_POWER, device_connect_cb);
+        result.toolbar_button[BTN_DEVICE_DISCONNECT] = popup_menu_add_button(result.menu, "Disconnect", LV_SYMBOL_EJECT, device_disconnect_cb);
+        result.toolbar_button[BTN_DEVICE_DELETE] = popup_menu_add_button(result.menu, "Delete", LV_SYMBOL_TRASH, device_delete_cb);
+        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add", LV_SYMBOL_PLUS, device_add_cb);
+
     } else {
-        result.toolbar_button[BTN_PASSWORD_EDIT] = create_floating_button(result.tab, LV_SYMBOL_EDIT, 1, password_edit_cb);
-        result.toolbar_button[BTN_PASSWORD_APPLY] = create_floating_button(result.tab, LV_SYMBOL_OK, 2, password_use_cb);
+        result.menu = popup_menu_create(result.tab, 3);
+        result.toolbar_button[BTN_PASSWORD_EDIT] = popup_menu_add_button(result.menu, "Edit", LV_SYMBOL_EDIT, password_edit_cb);
+        result.toolbar_button[BTN_PASSWORD_APPLY] = popup_menu_add_button(result.menu, "Use", LV_SYMBOL_OK, password_use_cb);
+        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add", LV_SYMBOL_PLUS, password_add_cb);
     }
 
     return result;
@@ -323,7 +323,7 @@ void show_toast(const char *message, bool is_error) {
 
     lv_label_set_text(lv_obj_get_child(toast, 0), message);
 
-    if (timer) lv_timer_delete(timer);
+    if (timer) lv_timer_del(timer);
     timer = lv_timer_create(toast_timer_cb, TOAST_DURATION, toast);
     lv_timer_set_repeat_count(timer, 1);
 }
@@ -371,8 +371,6 @@ static void battery_state_update(lv_timer_t *t) {
         strcpy(symbol, LV_SYMBOL_BATTERY_EMPTY);
     }
 
-    
-
     sprintf(buf, "%s %0.2fv", symbol, volts);
     lv_label_set_text(battery_state, buf);
 }
@@ -395,7 +393,7 @@ void init_ui() {
 
     lv_obj_add_event_cb(tabview, tab_switch_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_set_size(tabview, SCREEN_W, SCREEN_H);
-    lv_obj_center(tabview);
+    lv_obj_align(tabview, LV_ALIGN_BOTTOM_MID, 0, ycoord(0));
 
     device_tab = init_tab_view("Devices", tabview, &device_registry_common, 
         device_list_item_cb, TAB_ID_DEVICE, LV_SYMBOL_BLUETOOTH);
@@ -409,7 +407,7 @@ void init_ui() {
 
     lv_obj_t *battery_state = lv_label_create(lv_screen_active());
     lv_obj_set_size(battery_state, 70, 30);
-    lv_obj_align(battery_state, LV_ALIGN_BOTTOM_MID, 5, 0);
+    lv_obj_align(battery_state, LV_ALIGN_TOP_MID, 5, 5);
     lv_obj_set_style_text_font(battery_state, lv_theme_get_font_small(battery_state), 0);
     lv_label_set_text(battery_state, "");
     battery_state_timer = lv_timer_create(battery_state_update, 5000, battery_state);

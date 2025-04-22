@@ -11,7 +11,7 @@
 #define LCD_V_RES (466)
 
 #define SCREEN_W (360)
-#define SCREEN_H (400)
+#define SCREEN_H (440)
 
 #define TAB_BAR_H (50)
 #define TOOL_BAR_H (50)
@@ -25,6 +25,7 @@
 
 #define BTN_DEVICE_DELETE (3)
 #define BTN_DEVICE_DISCONNECT (2)
+#define BTN_ITEM_ADD (0)
 #define BTN_DEVICE_CONNECT (1)
 #define BTN_PASSWORD_EDIT (1)
 #define BTN_PASSWORD_APPLY (2)
@@ -51,6 +52,7 @@ void ui_on_new_device_saved(int index);
 void ui_on_new_device_paired();
 
 void ui_on_password_dialog_closed(int index);
+void ui_on_touch_pressed(int x, int y);
 
 void init_touch_test_ui();
 

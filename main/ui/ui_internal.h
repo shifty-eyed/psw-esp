@@ -7,6 +7,12 @@
 #include "lvgl9to8.h"
 #include "style.h"
 
+void delayed_menu_hide(lv_obj_t* menu);
+bool popup_menu_visible(lv_obj_t* menu);
+
+lv_obj_t* popup_menu_create(lv_obj_t* parent, int num_items);
+lv_obj_t* popup_menu_add_button(lv_obj_t* menu, const char* text,  const char* symbol, lv_event_cb_t cb);
+
 void pair_device_dialog_init();
 bool pair_device_dialog_is_open();
 void pair_device_dialog_show();

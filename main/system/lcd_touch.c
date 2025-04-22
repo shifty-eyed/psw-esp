@@ -22,6 +22,7 @@ static const char *TAG = "LCD_TOUCH";
 
 static SemaphoreHandle_t lvgl_mux = NULL;
 static esp_lcd_panel_handle_t panel_handle = NULL;
+static touch_callbacks_t* touch_callbacks = NULL;
 
 #define LCD_HOST    SPI2_HOST
 #define LCD_BIT_PER_PIXEL       (16)
@@ -104,14 +105,17 @@ static void example_lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
 
     if (win) {
         if (fake_press) {
-            ESP_LOGW("TOUCH", "Fake press detected");
+            ESP_LOGD("TOUCH", "Fake press detected");
         } else {
             data->point.x = prev_x = tp_x;
             data->point.y = prev_y = tp_y;
             data->state = LV_INDEV_STATE_PRESSED;
             last_press_time = esp_timer_get_time();
             already_released = false;
-            ESP_LOGI("TOUCH", "Press at (%d, %d)", (int)tp_x, (int)tp_y);
+            ESP_LOGD("TOUCH", "Press at (%d, %d)", (int)tp_x, (int)tp_y);
+            if (touch_callbacks && touch_callbacks->on_press) {
+                touch_callbacks->on_press(tp_x, tp_y);
+            }
         }
     }
     else if (!already_released) {
@@ -119,7 +123,10 @@ static void example_lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
         data->point.x = prev_x;
         data->point.y = prev_y;
         data->state = LV_INDEV_STATE_RELEASED;
-        ESP_LOGI("TOUCH", "Release (%d, %d)", (int)prev_x, (int)prev_y);
+        ESP_LOGD("TOUCH", "Release (%d, %d)", (int)prev_x, (int)prev_y);
+        if (touch_callbacks && touch_callbacks->on_release) {
+            touch_callbacks->on_release(prev_x, prev_y);
+        }
     }
 }
 
@@ -159,7 +166,8 @@ static void example_lvgl_port_task(void *arg) {
     }
 }
 
-void init_lcd_and_touch(void) {
+void init_lcd_and_touch(touch_callbacks_t* touch_cb) {
+    touch_callbacks = touch_cb;
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 

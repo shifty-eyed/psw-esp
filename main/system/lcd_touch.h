@@ -3,7 +3,12 @@
 
 #include "esp_lcd_sh8601.h"
 
-void init_lcd_and_touch(void);
+typedef struct {
+    void (*on_press)(int x, int y);
+    void (*on_release)(int x, int y);
+} touch_callbacks_t;
+
+void init_lcd_and_touch(touch_callbacks_t* touch_press_callback);
 void lcd_panel_on(bool value);
 
 bool lvgl_port_lock(int timeout_ms);

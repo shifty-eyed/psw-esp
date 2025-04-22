@@ -8,23 +8,23 @@ TBD
 
 
 # TODO
-dont use disabled buttons, hide instead
-keyboard make better fit to round display
 bigger font
 
 ## Pair device dialog
     fix pairing known device error hadnling
 
-## Pop up menus? 
-    device tab: 2 btn visible: conn/dis, (...) -> create, delete, set device name
-    password tab: 2 btn visible: apply, (...) -> create, delete, edit
-
+## Pop up menus
+    one flat button in the bottom-middle: ... openng a menu with other buttons
+    use BT icon only at connected device 
+    use long press on device list item to connect or disconnect
+    use long press on password to type it
+    
 ## Refactoring
     merge the logic for registry
 
 ## Misc
+
     settings:
-    add brightness control
     device name
 
 
