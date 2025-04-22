@@ -371,8 +371,6 @@ static void battery_state_update(lv_timer_t *t) {
         strcpy(symbol, LV_SYMBOL_BATTERY_EMPTY);
     }
 
-    
-
     sprintf(buf, "%s %0.2fv", symbol, volts);
     lv_label_set_text(battery_state, buf);
 }
