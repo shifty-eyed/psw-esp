@@ -5,7 +5,6 @@
 
 #include "registry/item_registry.h"
 #include "bt/my_bt.h"
-#include "system/power_control.h"
 
 static const char *TAG = "UI";
 
@@ -26,7 +25,6 @@ static lv_timer_t *device_connect_timer = NULL;
 
 static lv_obj_t *toast = NULL;
 static lv_timer_t *timer = NULL;
-static lv_timer_t *battery_state_timer = NULL;
 
 static void updale_list_items(lv_obj_t *list, registry_api_t *registry, lv_event_cb_t cb, char *symbol);
 
@@ -39,15 +37,6 @@ void ui_on_touch_pressed(int x, int y) {
     }
 }
 
-lv_coord_t xcoord(lv_coord_t value) {
-    return (lv_coord_t)(value * COORD_RATIO_X);
-}
-
-lv_coord_t ycoord(lv_coord_t value) {
-    return (lv_coord_t)(value * COORD_RATIO_Y);
-}
-
-
 static void evaluate_buttons_state() {
     bool connected = bt_is_connected();
     bool device_selected = device_tab.selected_item >= 0;
@@ -59,47 +48,6 @@ static void evaluate_buttons_state() {
 
     lv_show(password_tab.toolbar_button[BTN_PASSWORD_EDIT], password_selected);
     lv_show(password_tab.toolbar_button[BTN_PASSWORD_APPLY], password_selected);
-}
-
-lv_obj_t* mylv_create_container_flex(lv_obj_t* parent, lv_flex_flow_t flow, int32_t width, int32_t height) {
-    lv_obj_t* result = mylv_create_container(parent, width, height);
-    lv_obj_set_flex_flow(result, flow);
-    return result;
-}
-
-lv_obj_t* mylv_create_container(lv_obj_t* parent, int32_t width, int32_t height) {
-    lv_obj_t* result = lv_obj_create(parent);
-    lv_obj_set_style_pad_all(result, 0, 0);
-    lv_obj_set_style_border_side(result, LV_BORDER_SIDE_NONE, 0);
-    lv_obj_remove_flag(result, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_opa(result, LV_OPA_0, 0);
-    if (width > 0) {
-        lv_obj_set_width(result, width);
-    }
-    if (height > 0) {
-        lv_obj_set_height(result, height);
-    }
-    return result;
-}
-
-void lv_enable(lv_obj_t *obj, bool enabled) {
-    if (enabled) {
-        lv_obj_remove_state(obj, LV_STATE_DISABLED);
-    } else {
-        lv_obj_add_state(obj, LV_STATE_DISABLED);
-    }
-}
-
-void lv_show(lv_obj_t *obj, bool visible) {
-    if (visible) {
-        lv_obj_remove_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_remove_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
-        lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
-    } else {
-        lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
-        lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE);
-    }
 }
 
 static void unselect_list_item(tab_components_t* tab_data) {
@@ -277,14 +225,15 @@ static tab_components_t init_tab_view(char *text, lv_obj_t *parent, registry_api
         result.menu = popup_menu_create(result.tab, 4);
         result.toolbar_button[BTN_DEVICE_CONNECT] = popup_menu_add_button(result.menu, "Connect", LV_SYMBOL_POWER, device_connect_cb);
         result.toolbar_button[BTN_DEVICE_DISCONNECT] = popup_menu_add_button(result.menu, "Disconnect", LV_SYMBOL_EJECT, device_disconnect_cb);
-        result.toolbar_button[BTN_DEVICE_DELETE] = popup_menu_add_button(result.menu, "Delete", LV_SYMBOL_TRASH, device_delete_cb);
-        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add", LV_SYMBOL_PLUS, device_add_cb);
+        result.toolbar_button[BTN_DEVICE_DELETE] = popup_menu_add_button(result.menu, "Delete Device", LV_SYMBOL_TRASH, device_delete_cb);
+        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add Device", LV_SYMBOL_PLUS, device_add_cb);
 
     } else {
-        result.menu = popup_menu_create(result.tab, 3);
-        result.toolbar_button[BTN_PASSWORD_EDIT] = popup_menu_add_button(result.menu, "Edit", LV_SYMBOL_EDIT, password_edit_cb);
-        result.toolbar_button[BTN_PASSWORD_APPLY] = popup_menu_add_button(result.menu, "Use", LV_SYMBOL_OK, password_use_cb);
-        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add", LV_SYMBOL_PLUS, password_add_cb);
+        result.menu = popup_menu_create(result.tab, 4);
+        result.toolbar_button[BTN_PASSWORD_EDIT] = popup_menu_add_button(result.menu, "Edit Password", LV_SYMBOL_EDIT, password_edit_cb);
+        result.toolbar_button[BTN_PASSWORD_DELETE] = popup_menu_add_button(result.menu, "Delete Password", LV_SYMBOL_EDIT, password_edit_cb);
+        result.toolbar_button[BTN_PASSWORD_APPLY] = popup_menu_add_button(result.menu, "Use password", LV_SYMBOL_OK, password_use_cb);
+        result.toolbar_button[BTN_ITEM_ADD] = popup_menu_add_button(result.menu, "Add Password", LV_SYMBOL_PLUS, password_add_cb);
     }
 
     return result;
@@ -341,43 +290,9 @@ void show_spinner(bool show) {
     }
 }
 
-static void battery_state_update(lv_timer_t *t) {
-    lv_obj_t *battery_state = (lv_obj_t *)t->user_data;
-    float volts;
-    int data;
-    char buf[20];
-    char symbol[8];
-    adc_get_value(&volts, &data);
-
-    if (volts > 4.2) {
-        lv_obj_set_style_text_color(battery_state, lv_palette_main(LV_PALETTE_CYAN), 0);
-    } else if (volts < 3.2) {
-        lv_obj_set_style_text_color(battery_state, lv_palette_main(LV_PALETTE_RED), 0);
-    } else {
-        lv_obj_set_style_text_color(battery_state, lv_palette_main(LV_PALETTE_AMBER), 0);
-    }
-    
-    if (volts > 4.2) {
-        strcpy(symbol, LV_SYMBOL_CHARGE);
-    } else if (volts > 3.9) {
-        strcpy(symbol, LV_SYMBOL_BATTERY_FULL);
-    } else if (volts > 3.7) {
-        strcpy(symbol, LV_SYMBOL_BATTERY_3);
-    } else if (volts > 3.45) {
-        strcpy(symbol, LV_SYMBOL_BATTERY_2);
-    } else if (volts > 3.2) {
-        strcpy(symbol, LV_SYMBOL_BATTERY_1);
-    } else {
-        strcpy(symbol, LV_SYMBOL_BATTERY_EMPTY);
-    }
-
-    sprintf(buf, "%s %0.2fv", symbol, volts);
-    lv_label_set_text(battery_state, buf);
-}
-
 void init_ui() {
     ESP_LOGI(TAG, "init_ui()");
-    init_theme();
+    init_color_theme();
 
     #ifdef LVGL8
     tabview = lv_tabview_create(lv_screen_active(), LV_DIR_TOP, TAB_BAR_H);
@@ -404,11 +319,6 @@ void init_ui() {
 
     pair_device_dialog_init();
     edit_password_dialog_init();
+    init_battery_indicator();
 
-    lv_obj_t *battery_state = lv_label_create(lv_screen_active());
-    lv_obj_set_size(battery_state, 70, 30);
-    lv_obj_align(battery_state, LV_ALIGN_TOP_MID, 5, 5);
-    lv_obj_set_style_text_font(battery_state, lv_theme_get_font_small(battery_state), 0);
-    lv_label_set_text(battery_state, "");
-    battery_state_timer = lv_timer_create(battery_state_update, 5000, battery_state);
 }

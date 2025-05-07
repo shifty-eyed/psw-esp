@@ -12,11 +12,12 @@ set(srcs "main.c"
          "registry/password_registry.c"
          "registry/my_nvs.c"
          "ui/ui.c"
-         "ui/style.c"
+         "ui/common.c"
          "ui/pair_device_dialog.c"
          "ui/edit_password_dialog.c"
          "ui/keyboard.c"
          "ui/popup_menu.c"
+         "ui/battery_indicator.c"
         )
 set(include_dirs ".;./bt;./registry;./system;./ui")
 

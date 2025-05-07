@@ -74,7 +74,7 @@ void delayed_menu_hide(lv_obj_t* menu) {
     if (menu_hide_timer) {
         lv_timer_del(menu_hide_timer);
     }
-    menu_hide_timer = lv_timer_create(menu_hide_timer_cb, 300, menu);
+    menu_hide_timer = lv_timer_create(menu_hide_timer_cb, 200, menu);
     lv_timer_set_repeat_count(menu_hide_timer, 1);
     ESP_LOGI(TAG, "delayed_menu_hide starting: lv_obj_get_y=%d", lv_obj_get_y(menu));
 }

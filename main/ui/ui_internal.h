@@ -5,7 +5,15 @@
 
 #include "item_registry.h"
 #include "lvgl9to8.h"
-#include "style.h"
+
+
+extern 
+lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color, 
+    delete_button_bg_color,
+    cancel_button_bg_color,
+    disabled_button_bg_color,
+    disabled_button_text_color,
+    title_text_color, text_input_bg_color;
 
 void delayed_menu_hide(lv_obj_t* menu);
 bool popup_menu_visible(lv_obj_t* menu);
@@ -23,6 +31,9 @@ void edit_password_dialog_show(password_entry_t* initial_value);
 
 void show_toast(const char *message, bool is_error);
 void show_spinner(bool show);
+
+void init_color_theme();
+void init_battery_indicator();
 
 void lv_enable(lv_obj_t *obj, bool enabled);
 void lv_show(lv_obj_t *obj, bool visible);
