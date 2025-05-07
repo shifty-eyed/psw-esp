@@ -6,7 +6,6 @@
 #include "item_registry.h"
 #include "lvgl9to8.h"
 
-
 extern 
 lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color, 
     delete_button_bg_color,
@@ -28,6 +27,8 @@ void pair_device_dialog_on_pairing_succeeded();
 
 void edit_password_dialog_init();
 void edit_password_dialog_show(password_entry_t* initial_value);
+
+void backup_dialog_show();
 
 void show_toast(const char *message, bool is_error);
 void show_spinner(bool show);

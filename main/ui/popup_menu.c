@@ -10,8 +10,8 @@ static const char *TAG = "MENU";
 static lv_timer_t *menu_hide_timer = NULL;
 
 #define MENU_WIDTH (260)
-#define MENU_ITEM_HEIGHT (40)
-#define MENU_ITEM_GAP (10)
+#define MENU_ITEM_HEIGHT (45)
+#define MENU_ITEM_GAP (15)
 #define FLAG_MENU_VISIBLE LV_OBJ_FLAG_USER_1
 
 #define MENU_POS_INVISIBLE (345)

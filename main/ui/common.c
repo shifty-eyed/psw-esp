@@ -9,6 +9,9 @@ lv_color_t row_bg_color1, row_bg_color2, row_bg_selected, row_text_color,
     disabled_button_text_color,
     title_text_color, text_input_bg_color;
 
+static lv_obj_t *toast = NULL;
+static lv_timer_t *timer = NULL;
+static lv_obj_t* spinner;
 
 void init_color_theme() {
     row_bg_color1 = lv_color_make(10, 10, 15);
@@ -80,5 +83,47 @@ void lv_show(lv_obj_t *obj, bool visible) {
         lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_IGNORE_LAYOUT);
         lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+    }
+}
+
+static void toast_timer_cb(lv_timer_t *t) {
+    lv_obj_delete(toast);
+    lv_timer_delete(timer);
+    toast = NULL;
+    timer = NULL;
+}
+
+void show_toast(const char *message, bool is_error) {
+    if (toast) {
+        return;
+    }
+    toast = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(toast, 200, 50);
+    lv_obj_align(toast, LV_ALIGN_BOTTOM_MID, 0, -40);
+    lv_obj_set_style_bg_color(toast, lv_palette_main(is_error ? LV_PALETTE_RED : LV_PALETTE_BLUE), 0);
+    lv_obj_set_style_radius(toast, 10, 0);
+    lv_obj_set_style_pad_all(toast, 10, 0);
+    lv_obj_set_style_text_color(toast, lv_color_white(), 0);
+    lv_obj_remove_flag(toast, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *label = lv_label_create(toast);
+    lv_obj_center(label);
+
+    lv_label_set_text(lv_obj_get_child(toast, 0), message);
+
+    if (timer) lv_timer_del(timer);
+    timer = lv_timer_create(toast_timer_cb, TOAST_DURATION, toast);
+    lv_timer_set_repeat_count(timer, 1);
+}
+
+void show_spinner(bool show) {
+    if (!spinner) {
+        spinner = lv_spinner_create(lv_screen_active(), 1000, 60);
+        lv_obj_align(spinner, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_size(spinner, SPINNER_SIZE, SPINNER_SIZE);
+    }
+    if (show) {
+        lv_obj_remove_flag(spinner, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(spinner, LV_OBJ_FLAG_HIDDEN);
     }
 }

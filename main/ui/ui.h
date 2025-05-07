@@ -30,7 +30,7 @@
 
 #define BTN_PASSWORD_APPLY (1)
 #define BTN_PASSWORD_EDIT (2)
-#define BTN_PASSWORD_DELETE (3)
+#define BTN_PASSWORD_BACKUP (3)
 
 #define TOAST_DURATION (2000)
 
@@ -40,7 +40,7 @@
 // edit password dialog
 #define DIALOG_TOP_BAR_WIDTH (300)
 #define DIALOG_WIDTH 400
-#define DIALOG_HEIGHT SCREEN_H
+#define DIALOG_HEIGHT 400
 
 #define KEYBOARD_WIDTH DIALOG_WIDTH
 #define KEYBOARD_HEIGHT (250)
