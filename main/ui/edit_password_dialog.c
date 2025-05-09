@@ -15,6 +15,7 @@ static password_entry_t current_editing_entry;
 static lv_group_t* group_input_password = NULL;
 static lv_group_t* group_input_name = NULL;
 
+static lv_obj_t* main_screen = NULL;
 static lv_obj_t* dialog = NULL;
 static lv_obj_t* save_button = NULL;
 static lv_obj_t* cancel_button = NULL;
@@ -41,6 +42,7 @@ static void close_generate_settings_cb(lv_event_t *e);
 
 static void close_dialog() {
     lv_show(dialog, false);
+    lv_show(main_screen, true);
     lv_group_focus_freeze(group_input_name, false);
     lv_group_focus_freeze(group_input_password, false);
 }
@@ -120,6 +122,7 @@ void edit_password_dialog_show(password_entry_t* initial_value) {
         current_editing_entry.password[0] = '\0';    
     }
     lv_show(dialog, true);
+    lv_show(main_screen, false);
     lv_textarea_set_text(input_password, current_editing_entry.password);
     lv_textarea_set_text(input_name, current_editing_entry.name);
 
@@ -367,11 +370,12 @@ static void create_input_password_component() {
     lv_obj_set_style_bg_color(input_password, text_input_bg_color, 0);
 }
 
-void edit_password_dialog_init() {
+void edit_password_dialog_init(lv_obj_t* parent) {
     if (dialog != NULL) {
         return;
     }
 
+    main_screen = parent;
     dialog = lv_obj_create(lv_screen_active());
     lv_obj_set_size(dialog, DIALOG_WIDTH, DIALOG_HEIGHT);
     lv_obj_center(dialog);

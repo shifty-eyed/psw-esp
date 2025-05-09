@@ -12,6 +12,7 @@ static const char *TAG = "PAIR_DIALOG";
 
 static lv_group_t* group_input_name = NULL;
 static lv_obj_t* dialog = NULL;
+static lv_obj_t* main_screen = NULL;
 static lv_obj_t* spinner = NULL;
 static lv_obj_t* status_label = NULL;
 static lv_obj_t* save_button = NULL;
@@ -23,6 +24,7 @@ static bool paired = false;
 
 static void close_dialog() {
     lv_show(dialog, false);
+    lv_show(main_screen, true);
     lv_group_focus_freeze(group_input_name, false);
 }
 
@@ -90,6 +92,7 @@ void pair_device_dialog_show() {
     lv_label_set_text(status_label, "Pairing...");
     lv_show(spinner, true);
     lv_show(dialog, true);
+    lv_show(main_screen, false);
 
     lv_group_focus_obj(input_name);
     lv_group_focus_freeze(group_input_name, true);
@@ -98,11 +101,12 @@ void pair_device_dialog_show() {
     evaluate_save_button_state();
 }
 
-void pair_device_dialog_init() {
+void pair_device_dialog_init(lv_obj_t* parent) {
     if (dialog != NULL) {
         return;
     }
 
+    main_screen = parent;
     dialog = lv_obj_create(lv_screen_active());
     lv_obj_set_size(dialog, DIALOG_WIDTH, DIALOG_HEIGHT);
     lv_obj_center(dialog);
@@ -114,16 +118,16 @@ void pair_device_dialog_init() {
     save_button = lv_button_create(dialog);
     lv_obj_add_event_cb(save_button, save_password_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(save_button, LV_SYMBOL_SAVE, 0);
-    lv_obj_set_size(save_button, xcoord(130), ycoord(50));
-    lv_obj_align(save_button, LV_ALIGN_TOP_LEFT, xcoord(30), ycoord(-20));
+    lv_obj_set_size(save_button, xcoord(170), ycoord(50));
+    lv_obj_align(save_button, LV_ALIGN_TOP_LEFT, xcoord(10), ycoord(-20));
     lv_obj_set_style_bg_color(save_button, disabled_button_bg_color, LV_STATE_DISABLED);
     lv_obj_set_style_text_color(save_button, disabled_button_text_color, LV_STATE_DISABLED);
 
     cancel_button = lv_button_create(dialog);
     lv_obj_add_event_cb(cancel_button, cancel_dialog_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_image_src(cancel_button, LV_SYMBOL_CLOSE, 0);
-    lv_obj_set_size(cancel_button, xcoord(130), ycoord(50));
-    lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, xcoord(-30), ycoord(-20));
+    lv_obj_set_size(cancel_button, xcoord(170), ycoord(50));
+    lv_obj_align(cancel_button, LV_ALIGN_TOP_RIGHT, xcoord(-10), ycoord(-20));
     lv_obj_set_style_bg_color(cancel_button, cancel_button_bg_color, 0);
 
     spinner = lv_spinner_create(dialog, 1000, 60);

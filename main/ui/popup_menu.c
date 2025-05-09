@@ -74,7 +74,7 @@ void delayed_menu_hide(lv_obj_t* menu) {
     if (menu_hide_timer) {
         lv_timer_del(menu_hide_timer);
     }
-    menu_hide_timer = lv_timer_create(menu_hide_timer_cb, 200, menu);
+    menu_hide_timer = lv_timer_create(menu_hide_timer_cb, 100, menu);
     lv_timer_set_repeat_count(menu_hide_timer, 1);
     ESP_LOGI(TAG, "delayed_menu_hide starting: lv_obj_get_y=%d", lv_obj_get_y(menu));
 }
@@ -100,7 +100,7 @@ lv_obj_t* popup_menu_create(lv_obj_t* parent, int num_items) {
 
     lv_obj_t* menu = mylv_create_container_flex(parent, LV_FLEX_FLOW_COLUMN, 
         xcoord(MENU_WIDTH), ycoord(num_items * (MENU_ITEM_HEIGHT + MENU_ITEM_GAP)));
-    lv_obj_set_flex_align(menu, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(menu, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(menu, LV_OBJ_FLAG_FLOATING);
     lv_obj_clear_flag(menu, FLAG_MENU_VISIBLE);
     lv_obj_align(menu, LV_ALIGN_TOP_MID, 0, MENU_POS_INVISIBLE);
@@ -110,7 +110,7 @@ lv_obj_t* popup_menu_create(lv_obj_t* parent, int num_items) {
     lv_obj_set_style_border_side(menu, LV_BORDER_SIDE_FULL, 0);
     lv_obj_set_style_border_width(menu, 2, 0);
     lv_obj_set_style_border_color(menu, lv_palette_main(LV_PALETTE_BLUE_GREY), 0);
-
+    lv_obj_set_style_pad_row(menu, 5, 0);
 
     lv_obj_t* menu_toggle_button = lv_button_create(menu);
     lv_obj_add_event_cb(menu_toggle_button, on_menu_button_click, LV_EVENT_CLICKED, NULL);
@@ -129,21 +129,19 @@ lv_obj_t* popup_menu_add_button(lv_obj_t* menu, const char* text,  const char* s
     lv_obj_t* container = mylv_create_container_flex(menu, LV_FLEX_FLOW_ROW, 
         xcoord(MENU_WIDTH), ycoord(MENU_ITEM_HEIGHT + MENU_ITEM_GAP));
     lv_obj_set_flex_align(container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_add_flag(container, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(container, cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_pad_hor(container, xcoord(10), 0);
 
     lv_obj_t* icon_btn = lv_button_create(container);
-    lv_obj_set_size(icon_btn, xcoord(MENU_ITEM_HEIGHT), ycoord(MENU_ITEM_HEIGHT));
-    lv_obj_add_event_cb(icon_btn, cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_size(icon_btn, xcoord(MENU_ITEM_HEIGHT-10), ycoord(MENU_ITEM_HEIGHT-10));
     lv_obj_set_style_bg_color(icon_btn, POPUP_MENU_ICON_COLOR, 0);
+    lv_obj_set_style_radius(icon_btn, ycoord(MENU_ITEM_HEIGHT/2), 0);
     lv_obj_set_style_bg_image_src(icon_btn, symbol, 0);
 
-    lv_obj_t* caption_btn = lv_button_create(container);
-    lv_obj_set_size(caption_btn, xcoord(180), ycoord(MENU_ITEM_HEIGHT));
-    lv_obj_add_event_cb(caption_btn, cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_set_style_bg_color(caption_btn, POPUP_MENU_BG_COLOR, 0);
-    lv_obj_t*label = lv_label_create(caption_btn);
-    lv_label_set_text(label, text);
+    lv_obj_t*label = lv_label_create(container);
     lv_obj_align(label, LV_ALIGN_LEFT_MID, 0, ycoord(0));
+    lv_label_set_text(label, text);
     
     return container;
 }

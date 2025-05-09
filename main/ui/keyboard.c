@@ -19,21 +19,21 @@ static const lv_buttonmatrix_ctrl_t device_name_kb_ctrl_uc_and_lc_map[] = {
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4,
     LV_BUTTONMATRIX_CTRL_CHECKED | 1, 1, 1, 1, 1, 1, 1, 1, LV_BUTTONMATRIX_CTRL_CHECKED | 1,
-    LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, LV_KEYBOARD_CTRL_BUTTON_FLAGS | 6, 6, LV_BUTTONMATRIX_CTRL_CHECKED | 5, 
+    LV_KEYBOARD_CTRL_BUTTON_FLAGS | 6, LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, 5, LV_BUTTONMATRIX_CTRL_CHECKED | 6, 
 };
 
 static const char * device_name_kb_map_spec[] = 
    {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
     "+", "&", "/", "*", "=", "%", "!", "?", "#", "<", ">", "\n",
     "\\",  "@", "$", "(", ")", "{", "}", "[", "]", ";", "'", "\n",
-    "1#", "ABC", " ", LV_SYMBOL_BACKSPACE, ""
+    "abc", "ABC", " ", LV_SYMBOL_BACKSPACE, ""
 };
 
 static const lv_buttonmatrix_ctrl_t device_name_kb_ctrl_spec_map[] = {
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, 6, LV_BUTTONMATRIX_CTRL_CHECKED | 5, 
+    LV_KEYBOARD_CTRL_BUTTON_FLAGS | 6, LV_KEYBOARD_CTRL_BUTTON_FLAGS | 5, 5, LV_BUTTONMATRIX_CTRL_CHECKED | 6, 
 };
 
 

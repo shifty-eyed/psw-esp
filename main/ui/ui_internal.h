@@ -20,15 +20,16 @@ bool popup_menu_visible(lv_obj_t* menu);
 lv_obj_t* popup_menu_create(lv_obj_t* parent, int num_items);
 lv_obj_t* popup_menu_add_button(lv_obj_t* menu, const char* text,  const char* symbol, lv_event_cb_t cb);
 
-void pair_device_dialog_init();
+void pair_device_dialog_init(lv_obj_t* parent);
 bool pair_device_dialog_is_open();
 void pair_device_dialog_show();
 void pair_device_dialog_on_pairing_succeeded();
 
-void edit_password_dialog_init();
+void edit_password_dialog_init(lv_obj_t* parent);
 void edit_password_dialog_show(password_entry_t* initial_value);
 
-void backup_dialog_show();
+
+void backup_dialog_show(lv_obj_t *parent);
 
 void show_toast(const char *message, bool is_error);
 void show_spinner(bool show);

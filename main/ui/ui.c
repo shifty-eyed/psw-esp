@@ -126,7 +126,7 @@ static void password_edit_cb(lv_event_t *e) {
 }
 
 static void make_backup_cb(lv_event_t *e) {
-    backup_dialog_show();
+    backup_dialog_show(tabview);
 }
 
 static void device_add_cb(lv_event_t *e) {
@@ -276,8 +276,8 @@ void init_ui() {
 
     evaluate_buttons_state();
 
-    pair_device_dialog_init();
-    edit_password_dialog_init();
+    pair_device_dialog_init(tabview);
+    edit_password_dialog_init(tabview);
     init_battery_indicator();
 
 }
